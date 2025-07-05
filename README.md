@@ -8,3 +8,7 @@ The client is programmed in C++ (ISO C++20 Standard)
 To compile it, you can use Visual Studio or the basic C++ compiler
 
 WARNING: It needs Boost 1.88.0+ to work. To do this, put the Boost include folder in "external"
+
+## How to connect
+
+To connect to a server, you can modify the "server.address" and "server.port" keys of the "data/config.ini" configuration file using the shell or a standard text editor
