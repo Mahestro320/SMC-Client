@@ -29,8 +29,6 @@ void connectIfNeeded(Client& client) {
 
 } // namespace
 
-// TESTER CD AVEC DES CHARS RANDOM
-
 int main(int /* argc */, char** /* argv */) {
     if (!init()) {
         return 1;
