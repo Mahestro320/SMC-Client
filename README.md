@@ -1,4 +1,4 @@
-# SMC (Super Mega Cool) Client by Mahestro_320
+# SMC (Super Mega Cool) Client v0.2.1 by Mahestro_320
 
 The **SMC client** (_SMCC_) is a **CLI (console)** application that uses commands to connect to an **SMC server** and request data from it by sending queries.
 
