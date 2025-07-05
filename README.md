@@ -16,8 +16,7 @@ To connect to a server, you can modify the `server.address` and `server.port` ke
 
 ## Configuration file
 
-The configuration file is stored at `data\config.ini`
-To modify values ​​in the file, you can either do it through the shell (with the `conf` command) or with a standard text editor
+The configuration file is stored at `data\config.ini`. To modify values ​​in the file, you can either do it through the shell (with the `conf` command) or with a standard text editor
 
 > [!NOTE]
 > Booleans are represented with a **0** for **false** and **1** for **true**
