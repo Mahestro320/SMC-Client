@@ -4,11 +4,11 @@
 
 using boost::asio::ip::tcp;
 
-bool Client::begin() {
-    return connect() && checkWelcomeMessage();
+bool Client::connect() {
+    return connectToServer() && checkWelcomeMessage();
 }
 
-bool Client::connect() {
+bool Client::connectToServer() {
     try {
         const Config& config{Config::getInstance()};
         const ConfigValues& config_values{config.getValues()};

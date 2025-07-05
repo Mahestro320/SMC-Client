@@ -14,14 +14,14 @@ class Client final {
     User user{};
     bool is_logged{};
 
-    bool connect();
+    bool connectToServer();
     bool checkWelcomeMessage();
     bool isWelcomeMessage(const std::string& message);
 
   public:
     Client() = default;
 
-    bool begin();
+    bool connect();
     void closeSocket();
 
     boost::asio::ip::tcp::socket& getSocket();

@@ -7,6 +7,7 @@
 struct ConfigValues {
     std::string server_address{};
     uint16_t server_port{};
+    bool connect_at_launch{};
     bool enable_verbose_output{};
 };
 

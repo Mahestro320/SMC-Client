@@ -19,6 +19,14 @@ bool init() {
     return config.load();
 }
 
+void connectIfNeeded(Client& client) {
+    Config& config{Config::getInstance()};
+    const ConfigValues& values{config.getValues()};
+    if (values.connect_at_launch) {
+        client.connect();
+    }
+}
+
 } // namespace
 
 // TESTER CD AVEC DES CHARS RANDOM
@@ -28,7 +36,7 @@ int main(int /* argc */, char** /* argv */) {
         return 1;
     }
     Client client{};
-    client.begin();
+    connectIfNeeded(client);
     console::out::inf();
 
     Shell shell{client};

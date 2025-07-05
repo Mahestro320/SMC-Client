@@ -16,7 +16,7 @@ exit_code_t ServerCommand::run() {
 }
 
 exit_code_t ServerCommand::runConnectOption() {
-    if (!client->begin()) {
+    if (!client->connect()) {
         console::out::err("error while connecting to server");
         return Error;
     }

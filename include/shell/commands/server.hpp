@@ -4,7 +4,7 @@
 
 class ServerCommand final : public Command {
   private:
-    exit_code_t runReconnectOption();
+    exit_code_t runConnectOption();
 
   public:
     ServerCommand() = default;

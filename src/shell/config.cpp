@@ -27,6 +27,7 @@ bool Config::getValuesFromTree() {
     try {
         values.server_address = property_tree.get<std::string>("server.address");
         values.server_port = property_tree.get<uint16_t>("server.port");
+        values.connect_at_launch = property_tree.get<bool>("server.connect_at_launch");
         values.enable_verbose_output = property_tree.get<bool>("stdout.verbose");
     } catch (const boost::property_tree::ptree_error& e) {
         console::out::err("error while getting config values from tree: " + std::string{e.what()});
