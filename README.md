@@ -25,10 +25,13 @@ Here are the file keys and their descriptions:
 
 ```ini
 [server]
-address:             This is the address the client will try to connect to (ip or domain name)
-port:                This is the port on which the target server accepts connections
-connect_at_launch:   Indicates whether the client should connect when the application is launched
+address=example.com    ; This is the address the client will try to connect to (ip or domain name)
+port=500               ; This is the port on which the target server accepts connections
+connect_at_launch=1    ; Indicates whether the client should connect when the application is launched
 
 [stdout]
-verbose:             Indicates whether the output is verbose or not
+verbose=1              ; Indicates whether the output is verbose or not
 ```
+
+> [!NOTE]
+> Each values ​​in the ini file above are examples
