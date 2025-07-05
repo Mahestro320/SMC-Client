@@ -13,3 +13,11 @@ To compile it, you can use Visual Studio or the basic C++ compiler
 ## How to connect
 
 To connect to a server, you can modify the "server.address" and "server.port" keys of the "data/config.ini" configuration file using the shell or a standard text editor
+
+## Configuration file
+
+The configuration file is stored at `data\config.ini`. It contains this values:
+
+- `server.address` and `server.port`: This is the ip address the client will try to connect to
+- `server.connect_at_launch`: Set it to 0 to not have the client connect to the server when launching, 1 to have it do so
+- `stdout.verbose`: Activates / deactivates verbose output
