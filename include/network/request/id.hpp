@@ -6,10 +6,12 @@ enum class RequestId : uint8_t {
     Login = 0x00,
     Logout = 0x01,
     GetUserRole = 0x40,
-    GetDirContent = 0x41,
     IOFileExists = 0x80,
-    IOGetFileType = 0x81,
-    IOGetRealPath = 0x82,
+    IOGetDirContent = 0x81,
+    IOGetFileType = 0x82,
+    IOGetFileSize = 0x83,
+    IOGetFileContent = 0x84,
+    IOGetRealPath = 0x85,
 };
 
 namespace network::request {

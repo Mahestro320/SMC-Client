@@ -1,6 +1,5 @@
 #pragma once
 
-#include <string>
 #include "file_type.hpp"
 
 struct FileInfo {

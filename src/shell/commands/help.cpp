@@ -1,4 +1,5 @@
 #include "io/console.hpp"
+#include "network/client.hpp"
 #include "shell/commands/help.hpp"
 #include "shell/commands_infos.hpp"
 #include "util/string.hpp"
@@ -31,21 +32,23 @@ void HelpCommand::printAllCommandsInfos() const {
 void HelpCommand::printBeginMessage() const {
     console::out::inf("to get more information about an command, type \"help <command name>\"");
     console::out::inf("available commands usage:");
-    console::out::inf("| name" + util::string::makeFilledString(NAME_SPACES_COUNT - 4) + " | short description" +
+    console::out::inf("| name" + util::string::makeFilledString(NAME_SPACES_COUNT - 4) + " | short name" +
+                      util::string::makeFilledString(NAME_SPACES_COUNT - 10) + " | short description" +
                       util::string::makeFilledString(SHORT_DESCRIPTION_SPACES_COUNT - 17) + " | can use offline" +
                       util::string::makeFilledString(CAN_USE_OFFLINE_SPACES_COUNT - 15) + " |\n");
 }
 
 void HelpCommand::printCommandInfos(const CommandInfos& cmd) const {
-    console::out::inf("  " + cmd.name + util::string::makeFilledString(NAME_SPACES_COUNT - cmd.name.size()) + "   " +
-                      cmd.short_description +
-                      util::string::makeFilledString(SHORT_DESCRIPTION_SPACES_COUNT - cmd.short_description.size()) +
-                      "   " + util::string::boolToYesOrNo(cmd.can_use_offline));
+    console::out::inf(
+        "  " + cmd.name + util::string::makeFilledString(NAME_SPACES_COUNT - cmd.name.size() + 3) + cmd.short_name +
+        util::string::makeFilledString(SHORT_NAME_SPACES_COUNT - cmd.short_name.size() + 3) + cmd.short_description +
+        util::string::makeFilledString(SHORT_DESCRIPTION_SPACES_COUNT - cmd.short_description.size() + 3) +
+        util::string::boolToYesOrNo(cmd.can_use_offline));
 }
 
 exit_code_t HelpCommand::printLongDescription() const {
     for (const CommandInfos& cmd : commands_infos) {
-        if (cmd.name == args[0]) {
+        if (cmd.name == args[0] || cmd.short_name == args[0]) {
             printLongDescriptionOf(cmd);
             return Success;
         }

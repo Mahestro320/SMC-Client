@@ -1,5 +1,6 @@
 #include "io/console.hpp"
 #include "network.hpp"
+#include "network/client.hpp"
 #include "network/request/handlers/get_user_role.hpp"
 #include "network/request/handlers/login.hpp"
 
@@ -42,7 +43,7 @@ bool LoginRH::getUserRole() {
     if (!handler.run()) {
         return false;
     }
-    final_user.role = handler.getRole();
+    final_user.role = handler.getValue();
     return true;
 }
 

@@ -1,6 +1,7 @@
 #include "io/console.hpp"
 #include "io/file_info.hpp"
-#include "network/request/handlers/get_dir_content.hpp"
+#include "network/client.hpp"
+#include "network/request/handlers/io_get_dir_content.hpp"
 #include "shell/commands/dir.hpp"
 #include "util/string.hpp"
 
@@ -8,7 +9,7 @@ using boost::asio::ip::tcp;
 
 exit_code_t DirCommand::run() {
     tcp::socket& socket{client->getSocket()};
-    GetDirContentRH handler{};
+    IOGetDirContentRH handler{};
     handler.setClient(client);
     const User& user{client->getUser()};
     handler.setPath(user.current_dir);

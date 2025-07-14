@@ -1,5 +1,6 @@
 #include "io/console.hpp"
 #include "network.hpp"
+#include "network/client.hpp"
 #include "network/request/handlers/get_user_role.hpp"
 
 using boost::asio::ip::tcp;
@@ -9,12 +10,12 @@ bool GetUserRoleRH::run() {
     if (!network::sendRequest(socket, RequestId::GetUserRole)) {
         return false;
     }
-    bool is_valid_role{getUserRole(socket)};
+    bool is_valid_role{getRole(socket)};
     bool is_valid_response{checkResponse(socket)};
     return is_valid_role && is_valid_response;
 }
 
-bool GetUserRoleRH::getUserRole(tcp::socket& socket) {
+bool GetUserRoleRH::getRole(tcp::socket& socket) {
     console::out::verbose("getting user role... ", false);
     uint8_t byte{};
     if (!network::readInt(socket, byte)) {
@@ -35,6 +36,6 @@ bool GetUserRoleRH::checkResponse(tcp::socket& socket) const {
     return true;
 }
 
-Role GetUserRoleRH::getRole() const {
+Role GetUserRoleRH::getValue() const {
     return role;
 }

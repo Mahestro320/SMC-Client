@@ -5,7 +5,6 @@
  * by Mahestro_320
  */
 
-#include <array>
 #include "common.hpp"
 #include "io/console.hpp"
 #include "network/client.hpp"
@@ -22,8 +21,18 @@ bool init() {
 void connectIfNeeded(Client& client) {
     Config& config{Config::getInstance()};
     const ConfigValues& values{config.getValues()};
-    if (values.connect_at_launch) {
+    if (values.client_connect_at_launch) {
         client.connect();
+    }
+}
+
+void processNewCommand(Shell& shell) {
+    try {
+        shell.processNewCommand();
+    } catch (const std::bad_alloc& e) {
+        console::out::err("memory error: " + std::string{e.what()});
+    } catch (const std::exception& e) {
+        console::out::err("unhandled exception: " + std::string{e.what()});
     }
 }
 
@@ -36,16 +45,11 @@ int main(int /* argc */, char** /* argv */) {
     Client client{};
     connectIfNeeded(client);
     console::out::inf();
-
     Shell shell{client};
     shell.start();
     while (common::is_running) {
-        try {
-            shell.processNewCommand();
-        } catch (const std::exception& e) {
-            console::out::err("error while processing a command: " + std::string{e.what()});
-        }
+        processNewCommand(shell);
     }
-    client.closeSocket();
+    client.close();
     return 0;
 }

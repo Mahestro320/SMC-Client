@@ -10,11 +10,14 @@ enum class ResponseId : uint8_t {
     UnknownUsername = 0x02,
     InvalidPassword = 0x40,
     InvalidData = 0x41,
+    InvalidBufferSize = 0x42,
     NotLogged = 0x80,
     IOFileNotExists = 0xC0,
-    IONotDirectory = 0xC1,
-    IOInvalidPath = 0xC2,
-    IONonAbsolutePath = 0xC3,
+    IOFileNotReadable = 0xC1,
+    IONotDirectory = 0xC2,
+    IONotFile = 0xC3,
+    IOInvalidPath = 0xC4,
+    IONonAbsolutePath = 0xC5,
 };
 
 namespace network::response {

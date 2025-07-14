@@ -1,4 +1,5 @@
 #include "io/console.hpp"
+#include "network/client.hpp"
 #include "network/request/handlers/login.hpp"
 #include "shell/commands/login.hpp"
 
@@ -24,8 +25,12 @@ exit_code_t LoginCommand::run() {
 }
 
 bool LoginCommand::getArgumentsValues() {
-    if (args.size() < 1) {
+    if (args.empty()) {
         console::out::err("invalid arguments: missing username");
+        return false;
+    }
+    if (args.size() < 2) {
+        console::out::err("invalid arguments: missing password");
         return false;
     }
     username = args[0];

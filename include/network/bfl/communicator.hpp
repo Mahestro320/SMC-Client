@@ -1,15 +1,17 @@
 #pragma once
 
-#include "../client.hpp"
-#include "decoder.hpp"
+struct FileInfo;
+class BFLDecoder;
+class Client;
 
 class BFLCommunicator {
   private:
     Client* client{};
-    BFLDecoder decoder{};
+    BFLDecoder* decoder{};
 
   public:
-    BFLCommunicator() = default;
+    BFLCommunicator();
+    ~BFLCommunicator();
 
     void setClient(Client* client);
     bool run();

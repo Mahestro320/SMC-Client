@@ -1,3 +1,4 @@
+#include "network/client.hpp"
 #include "network/request/handlers/logout.hpp"
 #include "shell/commands/logout.hpp"
 

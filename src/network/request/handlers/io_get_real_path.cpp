@@ -1,5 +1,6 @@
 #include "io/console.hpp"
 #include "network.hpp"
+#include "network/client.hpp"
 #include "network/request/handlers/io_get_real_path.hpp"
 
 using boost::asio::ip::tcp;
@@ -38,6 +39,6 @@ void IOGetRealPathRH::setInputPath(const std::filesystem::path& input_path) {
     this->input_path = input_path;
 }
 
-const std::filesystem::path& IOGetRealPathRH::realPath() const {
+const std::filesystem::path& IOGetRealPathRH::getValue() const {
     return real_path;
 }

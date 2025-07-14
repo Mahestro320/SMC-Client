@@ -1,5 +1,6 @@
 #include "io/console.hpp"
 #include "network.hpp"
+#include "network/client.hpp"
 #include "network/request/handlers/io_get_file_type.hpp"
 
 namespace fs = std::filesystem;
@@ -39,6 +40,6 @@ void IOGetFileTypeRH::setPath(const fs::path& path) {
     this->path = path;
 }
 
-FileType IOGetFileTypeRH::fileType() const {
+FileType IOGetFileTypeRH::getValue() const {
     return file_type;
 }

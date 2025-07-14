@@ -1,9 +1,10 @@
 #pragma once
 
+#include <boost/asio.hpp>
 #include <filesystem>
 #include "../handler.hpp"
 
-class IOGetRealPathRH : public RH {
+class IOGetRealPathRH final : public RH {
   private:
     std::filesystem::path input_path{}, real_path{};
 
@@ -16,5 +17,5 @@ class IOGetRealPathRH : public RH {
     bool run() override;
 
     void setInputPath(const std::filesystem::path& input_path);
-    const std::filesystem::path& realPath() const;
+    const std::filesystem::path& getValue() const;
 };

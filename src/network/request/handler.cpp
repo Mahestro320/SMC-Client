@@ -1,3 +1,4 @@
+#include "network/client.hpp"
 #include "network/request/handler.hpp"
 
 void RH::setClient(Client* client) {

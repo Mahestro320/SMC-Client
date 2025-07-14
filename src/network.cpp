@@ -1,12 +1,24 @@
 #include "io/console.hpp"
 #include "network.hpp"
+#include "network/request/handlers/io_file_exists.hpp"
 
 using boost::asio::ip::tcp;
+namespace fs = std::filesystem;
 
-bool network::sendRequest(tcp::socket& socket, RequestId id) {
+namespace {
+
+void pver(const std::string& msg, bool silent, bool line_return = true) {
+    if (!silent) {
+        console::out::verbose(msg, line_return);
+    }
+}
+
+} // namespace
+
+bool network::sendRequest(tcp::socket& socket, RequestId id, bool silent) {
     const uint8_t byte{static_cast<uint8_t>(id)};
-    console::out::verbose("sending request: " + std::to_string(byte) + " (" + request::getName(id) + ")");
-    if (!sendInt(socket, byte)) {
+    pver("sending request: " + std::to_string(byte) + " (" + request::getName(id) + ")", silent);
+    if (!sendInt<uint8_t>(socket, byte)) {
         return false;
     }
     const ResponseId response_id{readResponse(socket)};
@@ -18,18 +30,18 @@ bool network::sendRequest(tcp::socket& socket, RequestId id) {
     return true;
 }
 
-bool network::sendString(tcp::socket& socket, const std::string& str) {
-    console::out::verbose("sending string: \"" + str + "\"");
+bool network::sendString(tcp::socket& socket, const std::string& str, bool silent) {
+    pver("sending string: \"" + str + "\"", silent);
     return sendBuffer(socket, std::vector<char>(str.begin(), str.end()));
 }
 
-bool network::sendBuffer(tcp::socket& socket, const std::vector<char>& buffer) {
+bool network::sendBuffer(tcp::socket& socket, const std::vector<char>& buffer, bool silent) {
     const uint64_t buffer_size{buffer.size()};
-    console::out::verbose("sending buffer size (" + std::to_string(buffer_size) + ")");
-    if (!sendInt(socket, buffer_size)) {
+    pver("sending buffer size (" + std::to_string(buffer_size) + ")", silent);
+    if (!sendInt<uint64_t>(socket, buffer_size)) {
         return false;
     }
-    console::out::verbose("sending buffer content");
+    pver("sending buffer content", silent);
     boost::system::error_code error_code{};
     uint64_t bytes_write{boost::asio::write(socket, boost::asio::buffer(buffer), error_code)};
     if (error_code) {
@@ -43,37 +55,37 @@ bool network::sendBuffer(tcp::socket& socket, const std::vector<char>& buffer) {
     return true;
 }
 
-bool network::readString(tcp::socket& socket, std::string& str) {
-    console::out::verbose("reading string");
+bool network::readString(tcp::socket& socket, std::string& str, bool silent) {
+    pver("reading string", silent);
     std::vector<char> data(str.begin(), str.end());
     if (!readBuffer(socket, data)) {
         return false;
     }
     str = std::string(data.begin(), data.end());
-    console::out::verbose("string content: \"" + str + "\"");
+    pver("string content: \"" + str + "\"", silent);
     return true;
 }
 
-ResponseId network::readResponse(tcp::socket& socket) {
+ResponseId network::readResponse(tcp::socket& socket, bool silent) {
     uint8_t byte{};
-    console::out::verbose("receiving response... ", false);
+    pver("receiving response... ", silent, false);
     if (!readInt(socket, byte)) {
         return ResponseId::InvalidResponse;
     }
     ResponseId id{static_cast<ResponseId>(byte)};
-    console::out::verbose("done, id: " + std::to_string(byte) + " (" + response::getName(id) + ")");
+    pver("done, id: " + std::to_string(byte) + " (" + response::getName(id) + ")", silent);
     return id;
 }
 
-bool network::readBuffer(tcp::socket& socket, std::vector<char>& buffer) {
-    console::out::verbose("reading buffer size... ", false);
+bool network::readBuffer(tcp::socket& socket, std::vector<char>& buffer, bool silent) {
+    pver("reading buffer size... ", silent, false);
     boost::system::error_code error_code{};
     uint64_t buffer_size{};
     if (!readInt(socket, buffer_size)) {
         return false;
     }
     buffer.resize(buffer_size);
-    console::out::verbose("done (" + std::to_string(buffer_size) + ")\nreading buffer content... ", false);
+    pver("done (" + std::to_string(buffer_size) + ")\nreading buffer content... ", silent, false);
     const size_t bytes_read{boost::asio::read(socket, boost::asio::buffer(buffer, buffer_size), error_code)};
     if (error_code) {
         console::out::err("error: " + error_code.message());
@@ -83,7 +95,7 @@ bool network::readBuffer(tcp::socket& socket, std::vector<char>& buffer) {
         console::out::err("the buffer isn't fully readed !");
         return false;
     }
-    console::out::verbose("done");
+    pver("done", silent);
     return true;
 }
 

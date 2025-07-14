@@ -1,5 +1,6 @@
 #include "io/console.hpp"
 #include "network.hpp"
+#include "network/client.hpp"
 #include "network/request/handlers/io_file_exists.hpp"
 
 namespace fs = std::filesystem;
@@ -34,6 +35,6 @@ void IOFileExistsRH::setPath(const fs::path& path) {
     this->path = path;
 }
 
-bool IOFileExistsRH::doesFileExists() const {
+bool IOFileExistsRH::getValue() const {
     return does_file_exists;
 }

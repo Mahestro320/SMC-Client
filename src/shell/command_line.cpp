@@ -1,8 +1,16 @@
 #include "io/console.hpp"
 #include "shell/command_line.hpp"
+#include "util/env_var_str_resolver.hpp"
 
-void CommandLine::getLine() {
-    raw_line = console::in::getLine();
+bool CommandLine::getLine() {
+    std::string line{console::in::getLine()};
+    EnvVarStrResolver resolver{};
+    resolver.setInput(line);
+    if (!resolver.resolve()) {
+        return false;
+    }
+    raw_line = resolver.getOutput();
+    return true;
 }
 
 void CommandLine::tokenize() {

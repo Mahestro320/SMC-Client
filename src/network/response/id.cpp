@@ -11,9 +11,12 @@ const std::unordered_map<ResponseId, std::string> response_names{
     {ResponseId::UnknownUsername, "UNKNOWN_USERNAME"},
     {ResponseId::InvalidPassword, "INVALID_PASSWORD"},
     {ResponseId::InvalidData, "INVALID_DATA"},
+    {ResponseId::InvalidBufferSize, "INVALID_BUFFER_SIZE"},
     {ResponseId::NotLogged, "NOT_LOGGED"},
     {ResponseId::IOFileNotExists, "IO_FILE_NOT_EXISTS"},
+    {ResponseId::IOFileNotReadable, "IO_FILE_NOT_READABLE"},
     {ResponseId::IONotDirectory, "IO_NOT_DIRECTORY"},
+    {ResponseId::IONotFile, "IO_NOT_FILE"},
     {ResponseId::IOInvalidPath, "IO_INVALID_PATH"},
     {ResponseId::IONonAbsolutePath, "IO_NON_ABSOLUTE_PATH"},
 };

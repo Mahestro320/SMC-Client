@@ -8,12 +8,12 @@ class GetUserRoleRH final : public RH {
   private:
     Role role{Role::None};
 
-    bool getUserRole(boost::asio::ip::tcp::socket& socket);
+    bool getRole(boost::asio::ip::tcp::socket& socket);
     bool checkResponse(boost::asio::ip::tcp::socket& socket) const;
 
   public:
     GetUserRoleRH() = default;
 
     bool run() override;
-    Role getRole() const;
+    Role getValue() const;
 };

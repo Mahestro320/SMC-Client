@@ -2,8 +2,18 @@
 #include "network/client.hpp"
 #include "shell.hpp"
 #include "shell/command_line.hpp"
+#include "shell/commands/chdir.hpp"
+#include "shell/commands/clear.hpp"
+#include "shell/commands/client.hpp"
+#include "shell/commands/conf.hpp"
+#include "shell/commands/dir.hpp"
+#include "shell/commands/download.hpp"
+#include "shell/commands/help.hpp"
+#include "shell/commands/login.hpp"
+#include "shell/commands/logout.hpp"
+#include "shell/commands/quit.hpp"
 #include "shell/commands_infos.hpp"
-#include "shell/every_commands.hpp"
+#include "shell/config.hpp"
 #include "util/string.hpp"
 
 using boost::asio::ip::tcp;
@@ -19,7 +29,9 @@ void Shell::start() {
 void Shell::processNewCommand() {
     console::out::inf(getCommandInputStartInfo() + "> ", false);
     CommandLine command{};
-    command.getLine();
+    if (!command.getLine()) {
+        console::out::inf();
+    }
     if (command.empty()) {
         return;
     }
@@ -58,11 +70,12 @@ exit_code_t Shell::runCommand(const std::vector<std::string>& command_tokens) {
 
 bool Shell::canExecuteCmdName(const std::string& name) const {
     for (const CommandInfos& cmd : commands_infos) {
-        if (cmd.name == name) {
+        if (cmd.name == name || cmd.short_name == name) {
             return canExecuteCmdInstance(cmd);
         }
     }
-    return false;
+    console::out::err("no command found for " + name);
+    return true;
 }
 
 bool Shell::canExecuteCmdInstance(const CommandInfos& cmd) const {
@@ -86,25 +99,26 @@ bool Shell::canExecuteCmdInstance(const CommandInfos& cmd) const {
 Command* Shell::getCommandInstanceFromName(const std::string& name) const {
     if (name == "help") {
         return new HelpCommand{};
-    } else if (name == "cls") {
-        return new ClsCommand{};
+    } else if (name == "clear" || name == "clr") {
+        return new ClearCommand{};
     } else if (name == "quit") {
         return new QuitCommand{};
     } else if (name == "conf") {
         return new ConfCommand{};
-    } else if (name == "login") {
+    } else if (name == "login" || name == "lgi") {
         return new LoginCommand{};
-    } else if (name == "logout") {
+    } else if (name == "logout" || name == "lgo") {
         return new LogoutCommand{};
-    } else if (name == "server") {
-        return new ServerCommand{};
+    } else if (name == "client" || name == "clt") {
+        return new ClientCommand{};
     } else if (name == "dir") {
         return new DirCommand{};
-    } else if (name == "cd") {
-        return new CdCommand{};
-    } else {
-        return nullptr;
+    } else if (name == "chdir" || name == "cd") {
+        return new ChdirCommand{};
+    } else if (name == "download" || name == "dwl") {
+        return new DownloadCommand{};
     }
+    return nullptr;
 }
 
 std::vector<std::string> Shell::getArgsFromTokens(std::vector<std::string> tokens) const {
@@ -113,9 +127,17 @@ std::vector<std::string> Shell::getArgsFromTokens(std::vector<std::string> token
 }
 
 std::string Shell::getCommandInputStartInfo() const {
+    if (!client.isConnected()) {
+        return "NOT_CONNECTED";
+    }
+    const Config& config{Config::getInstance()};
+    const ConfigValues& config_values{config.getValues()};
+    const std::string addr_prefix{config_values.server_address + ":" + std::to_string(config_values.server_port) +
+                                  " -> "};
     if (!client.isLogged()) {
-        return "";
+        return (config_values.shell_print_addr_prefix ? addr_prefix : "") + "NOT_LOGGED";
     }
     const User& user{client.getUser()};
-    return user.name + "@" + (user.current_dir.empty() ? "." : user.current_dir.string());
+    return (config_values.shell_print_addr_prefix ? addr_prefix : "") + user.name + " @" +
+           (user.current_dir.empty() ? "." : user.current_dir.string());
 }

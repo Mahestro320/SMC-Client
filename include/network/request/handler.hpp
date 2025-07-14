@@ -1,6 +1,6 @@
 #pragma once
 
-#include "network/client.hpp"
+class Client;
 
 // Request Handler
 class RH {

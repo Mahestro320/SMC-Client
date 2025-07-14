@@ -7,59 +7,64 @@ exit_code_t ConfCommand::run() {
         console::out::err("invalid command argument");
         return Error;
     }
-    const std::string& option{args[0]};
-    if (option == "load") {
+    const std::string& option{};
+    return runOption(args[0]) ? Success : Error;
+}
+
+bool ConfCommand::runOption(const std::string& name) {
+    if (name == "load") {
         return runLoadOption();
-    } else if (option == "updatefile") {
+    } else if (name == "updatefile") {
         return runUpdateFileOption();
-    } else if (option == "printvals") {
+    } else if (name == "printvals") {
         return runPrintValsOption();
-    } else if (option == "set") {
+    } else if (name == "set") {
         return runSetOption();
-    } else if (option == "get") {
+    } else if (name == "get") {
         return runGetOption();
     } else {
-        console::out::err("unknown option: " + option);
-        return Error;
+        console::out::err("unknown option: " + name);
+        return false;
     }
-    return Success;
+    return true;
 }
 
-exit_code_t ConfCommand::runLoadOption() const {
+bool ConfCommand::runLoadOption() const {
     Config& config{Config::getInstance()};
-    return config.load() ? Success : Error;
+    return config.load();
 }
 
-exit_code_t ConfCommand::runSetOption() const {
+bool ConfCommand::runSetOption() const {
     if (args.size() < 3) {
         console::out::err("invalid command argument");
-        return Error;
+        return false;
     }
     const std::string& key{args[1]};
     const std::string& value{args[2]};
     console::out::verbose("setting \"" + key + "\" to \"" + value + "\"");
     Config& config{Config::getInstance()};
-    return config.setValue(key, value) ? Success : Error;
+    return config.setValue(key, value);
 }
 
-exit_code_t ConfCommand::runUpdateFileOption() const {
+bool ConfCommand::runUpdateFileOption() const {
     Config& config{Config::getInstance()};
     console::out::inf("updating config file");
-    return config.updateFile() ? Success : Error;
+    return config.updateFile();
 }
 
-exit_code_t ConfCommand::runGetOption() const {
+bool ConfCommand::runGetOption() const {
     if (args.size() < 2) {
         console::out::err("invalid command arguments");
-        return Error;
+        return false;
     }
     const std::string& key{args[1]};
     Config& config{Config::getInstance()};
     console::out::inf(key + ": " + config.getValue(key));
-    return Success;
+    console::out::inf(key + " (resolved): " + config.getResolvedValue(key));
+    return true;
 }
 
-exit_code_t ConfCommand::runPrintValsOption() const {
+bool ConfCommand::runPrintValsOption() const {
     Config& config{Config::getInstance()};
     for (const auto& section : config.getPropertyTree()) {
         console::out::inf("[" + section.first + "]");
@@ -68,5 +73,5 @@ exit_code_t ConfCommand::runPrintValsOption() const {
         }
         console::out::inf();
     }
-    return Success;
+    return true;
 }

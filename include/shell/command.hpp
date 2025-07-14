@@ -1,13 +1,10 @@
 #pragma once
 
-#include "network/client.hpp"
+#include <string>
+#include <vector>
+#include "exit_code.hpp"
 
-using exit_code_t = uint16_t;
-
-enum ExitCode : exit_code_t {
-    Success,
-    Error,
-};
+class Client;
 
 class Command {
   protected:

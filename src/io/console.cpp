@@ -29,10 +29,17 @@ void console::out::err(const std::string& msg, bool line_return) {
     }
 }
 
+void console::out::err(const std::exception& e, bool line_return) {
+    std::cout << e.what();
+    if (line_return) {
+        std::cout << std::endl;
+    }
+}
+
 void console::out::verbose(const std::string& msg, bool line_return) {
     Config& config{Config::getInstance()};
     ConfigValues config_values{config.getValues()};
-    if (config_values.enable_verbose_output) {
+    if (config_values.shell_verbose) {
         inf(msg, line_return);
     }
 }

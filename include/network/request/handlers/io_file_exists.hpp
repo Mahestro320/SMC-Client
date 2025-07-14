@@ -4,7 +4,7 @@
 #include "../handler.hpp"
 #include "network/response/id.hpp"
 
-class IOFileExistsRH : public RH {
+class IOFileExistsRH final : public RH {
   private:
     std::filesystem::path path{};
     bool does_file_exists{};
@@ -16,5 +16,5 @@ class IOFileExistsRH : public RH {
 
     bool run() override;
     void setPath(const std::filesystem::path& path);
-    bool doesFileExists() const;
+    bool getValue() const;
 };

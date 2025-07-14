@@ -4,11 +4,12 @@
 
 class ConfCommand final : public Command {
   private:
-    exit_code_t runLoadOption() const;
-    exit_code_t runUpdateFileOption() const;
-    exit_code_t runPrintValsOption() const;
-    exit_code_t runSetOption() const;
-    exit_code_t runGetOption() const;
+    bool runOption(const std::string& name);
+    bool runLoadOption() const;
+    bool runUpdateFileOption() const;
+    bool runPrintValsOption() const;
+    bool runSetOption() const;
+    bool runGetOption() const;
 
   public:
     ConfCommand() = default;

@@ -13,7 +13,7 @@ class CommandLine {
   public:
     CommandLine() = default;
 
-    void getLine();
+    bool getLine();
     void tokenize();
     bool empty() const;
     const std::vector<std::string>& getTokens() const;

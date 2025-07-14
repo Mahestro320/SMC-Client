@@ -13,21 +13,26 @@ class Client final {
 
     User user{};
     bool is_logged{};
+    bool is_connected{};
 
+    void resetState();
     bool connectToServer();
     bool checkWelcomeMessage();
     bool isWelcomeMessage(const std::string& message);
+    bool checkErr(const boost::system::error_code& ec);
 
   public:
     Client() = default;
+    ~Client();
 
     bool connect();
-    void closeSocket();
+    void close();
 
     boost::asio::ip::tcp::socket& getSocket();
     User& getUser();
     const User& getUser() const;
     bool isLogged() const;
+    bool isConnected() const;
 
     void setLogged(bool is_logged);
     void setUser(const User& user);

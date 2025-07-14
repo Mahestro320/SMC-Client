@@ -1,3 +1,4 @@
+#include "network/client.hpp"
 #include "shell/command.hpp"
 
 void Command::setClient(Client* client) {

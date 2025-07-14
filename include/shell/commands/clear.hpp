@@ -2,9 +2,9 @@
 
 #include "../command.hpp"
 
-class LogoutCommand final : public Command {
+class ClearCommand final : public Command {
   public:
-    LogoutCommand() = default;
+    ClearCommand() = default;
 
     exit_code_t run() override;
 };
