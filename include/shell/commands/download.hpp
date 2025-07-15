@@ -31,6 +31,7 @@ class DownloadCommand final : public Command {
 
     bool startTransmition();
     bool processNextBuffer();
+    void stopInfoThread();
     void deleteFileInstance();
 
     std::filesystem::path getNewOutputFileNameInDir(const std::filesystem::path& path) const;

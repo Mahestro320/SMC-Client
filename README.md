@@ -53,7 +53,7 @@ print_addr_prefix=1
 ; The default output for downloaded files
 download_output=C:\Users\<USERNAME>\Downloads
 
-; The size of each buffer that is received / sent
+; The size of each buffer that is received / sent (maximum is 65535)
 download_buffer_size=4096
 ```
 

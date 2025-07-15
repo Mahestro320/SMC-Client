@@ -14,11 +14,12 @@ exit_code_t DownloadCommand::run() {
         return Error;
     }
     console::out::verbose("input path: " + input_path_real.string() + "\noutput path: " + output_path.string());
-    if (!beginHandler()) {
+    if (!beginHandler() || !createOutputFile()) {
         return Error;
     }
     createInfoThread();
-    const bool success{createOutputFile() && startTransmition()};
+    const bool success{startTransmition()};
+    stopInfoThread();
     deleteFileInstance();
     return success ? Success : Error;
 }
@@ -160,9 +161,6 @@ bool DownloadCommand::startTransmition() {
             return false;
         }
     }
-    transmition_stopped_flag.store(true, std::memory_order_release);
-    while (!info_thread_stopped_flag.load(std::memory_order_acquire))
-        ;
     return true;
 }
 
@@ -173,6 +171,12 @@ bool DownloadCommand::processNextBuffer() {
     const std::vector<char>& buffer{handler.getCurrentBuffer()};
     output_file->write(buffer.data(), static_cast<std::streamsize>(buffer.size()));
     return true;
+}
+
+void DownloadCommand::stopInfoThread() {
+    transmition_stopped_flag.store(true, std::memory_order_release);
+    while (!info_thread_stopped_flag.load(std::memory_order_acquire))
+        ;
 }
 
 void DownloadCommand::deleteFileInstance() {
