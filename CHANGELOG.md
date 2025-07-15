@@ -21,3 +21,8 @@
 - renaming command `server` to `client`
 - replacing config file key `downloads.output` by `commands.download.output`
 - adding key in config file: `commands.download.buffer_size`
+
+## Version 0.3.1
+
+- When `download` command is interrupted by an error, the `info thread` is now correctely stopped
+- The `info thread` of `download` command is now starting at the good time
