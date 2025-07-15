@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 #include "shell/command.hpp"
-#include "util/version.hpp"
 
 class Client;
 struct CommandInfos;
@@ -19,8 +18,6 @@ class Shell final {
     std::string getCommandInputStartInfo() const;
 
   public:
-    static inline constexpr Version VERSION{0, 3, 1};
-
     Shell(Client& client);
 
     void start();

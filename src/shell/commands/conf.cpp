@@ -16,8 +16,8 @@ bool ConfCommand::runOption(const std::string& name) {
         return runLoadOption();
     } else if (name == "updatefile") {
         return runUpdateFileOption();
-    } else if (name == "printvals") {
-        return runPrintValsOption();
+    } else if (name == "print") {
+        return runPrintOption();
     } else if (name == "set") {
         return runSetOption();
     } else if (name == "get") {
@@ -64,7 +64,7 @@ bool ConfCommand::runGetOption() const {
     return true;
 }
 
-bool ConfCommand::runPrintValsOption() const {
+bool ConfCommand::runPrintOption() const {
     Config& config{Config::getInstance()};
     for (const auto& section : config.getPropertyTree()) {
         console::out::inf("[" + section.first + "]");

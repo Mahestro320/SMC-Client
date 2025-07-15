@@ -21,6 +21,12 @@ static inline const std::vector<CommandInfos> commands_infos{
         .can_use_offline = true,
     },
     CommandInfos{
+        .name = "infos",
+        .short_name = "inf",
+        .short_description = "print shell infos",
+        .can_use_offline = true,
+    },
+    CommandInfos{
         .name = "clear",
         .short_name = "clr",
         .short_description = "clear the screen",
@@ -36,7 +42,7 @@ static inline const std::vector<CommandInfos> commands_infos{
         .long_description = "usage: conf <option> [option args]\nthe options are:\n"
                             "\tload        load file\n"
                             "\tupdatefile  update file with new values\n"
-                            "\tprintvals   prints all the values\n"
+                            "\tprint       prints all the values\n"
                             "\tset         set a value with a key using [<key> <value>]\n"
                             "\tget         gets a value from a key using [<key>]",
         .can_use_offline = true,

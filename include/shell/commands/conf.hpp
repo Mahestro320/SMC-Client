@@ -7,7 +7,7 @@ class ConfCommand final : public Command {
     bool runOption(const std::string& name);
     bool runLoadOption() const;
     bool runUpdateFileOption() const;
-    bool runPrintValsOption() const;
+    bool runPrintOption() const;
     bool runSetOption() const;
     bool runGetOption() const;
 

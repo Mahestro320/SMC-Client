@@ -26,3 +26,9 @@
 
 - When `download` command is interrupted by an error, the `info thread` is now correctely stopped
 - The `info thread` of `download` command is now starting at the good time
+
+## Version 0.3.2
+
+- moving `constexpr` variable `Shell::VERSION` to `common::VERSION`
+- renaming `conf` command option `printvals` to `print`
+- adding `infos` command

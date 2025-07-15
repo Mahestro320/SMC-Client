@@ -1,3 +1,4 @@
+#include "common.hpp"
 #include "io/console.hpp"
 #include "network/client.hpp"
 #include "shell.hpp"
@@ -9,6 +10,7 @@
 #include "shell/commands/dir.hpp"
 #include "shell/commands/download.hpp"
 #include "shell/commands/help.hpp"
+#include "shell/commands/infos.hpp"
 #include "shell/commands/login.hpp"
 #include "shell/commands/logout.hpp"
 #include "shell/commands/quit.hpp"
@@ -22,7 +24,7 @@ Shell::Shell(Client& client) : client{client} {
 }
 
 void Shell::start() {
-    console::out::inf("SMC (Super Mega Cool) Client Shell v" + VERSION.toString() +
+    console::out::inf("SMC (Super Mega Cool) Client Shell v" + common::VERSION.toString() +
                       " by Mahestro_320\ntype \"help\" for help");
 }
 
@@ -99,6 +101,8 @@ bool Shell::canExecuteCmdInstance(const CommandInfos& cmd) const {
 Command* Shell::getCommandInstanceFromName(const std::string& name) const {
     if (name == "help") {
         return new HelpCommand{};
+    } else if (name == "infos" || name == "inf") {
+        return new InfosCommand{};
     } else if (name == "clear" || name == "clr") {
         return new ClearCommand{};
     } else if (name == "quit") {
