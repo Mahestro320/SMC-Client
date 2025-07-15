@@ -19,7 +19,7 @@ class Shell final {
     std::string getCommandInputStartInfo() const;
 
   public:
-    static inline constexpr Version VERSION{0, 3, 0};
+    static inline constexpr Version VERSION{0, 3, 1};
 
     Shell(Client& client);
 
