@@ -40,11 +40,11 @@ static inline const std::vector<CommandInfos> commands_infos{
     CommandInfos{
         .name = "conf",
         .long_description = "usage: conf <option> [option args]\nthe options are:\n"
-                            "\tload        load file\n"
-                            "\tupdatefile  update file with new values\n"
-                            "\tprint       prints all the values\n"
-                            "\tset         set a value with a key using [<key> <value>]\n"
-                            "\tget         gets a value from a key using [<key>]",
+                            "\tload    load file\n"
+                            "\tsave    update file with new values\n"
+                            "\tprint   prints all the values\n"
+                            "\tset     set a value with a key using [<key> <value>]\n"
+                            "\tget     gets a value from a key using [<key>]",
         .can_use_offline = true,
     },
     CommandInfos{
@@ -64,7 +64,7 @@ static inline const std::vector<CommandInfos> commands_infos{
         .short_name = "clt",
         .long_description = "usage: client <option>\nthe options are:\n"
                             "\tconnect     connects to the server\n"
-                            "\tdisconnect  disconnects from the server\n",
+                            "\tdisconnect  disconnects from the server",
     },
     CommandInfos{
         .name = "dir",
@@ -83,7 +83,7 @@ static inline const std::vector<CommandInfos> commands_infos{
         .name = "download",
         .short_name = "dwl",
         .short_description = "download a file",
-        .long_description = "usage: download <input path> <output path (optional)> <s=<buffer size> (optional)>",
+        .long_description = "usage: download <input path> <output path (optional)>",
         .must_be_logged = true,
     },
 };

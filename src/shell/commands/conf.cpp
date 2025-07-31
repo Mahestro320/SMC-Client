@@ -7,26 +7,23 @@ exit_code_t ConfCommand::run() {
         console::out::err("invalid command argument");
         return Error;
     }
-    const std::string& option{};
     return runOption(args[0]) ? Success : Error;
 }
 
-bool ConfCommand::runOption(const std::string& name) {
-    if (name == "load") {
+bool ConfCommand::runOption(const std::string& option) {
+    if (option == "load") {
         return runLoadOption();
-    } else if (name == "updatefile") {
-        return runUpdateFileOption();
-    } else if (name == "print") {
+    } else if (option == "save") {
+        return runSaveOption();
+    } else if (option == "print") {
         return runPrintOption();
-    } else if (name == "set") {
+    } else if (option == "set") {
         return runSetOption();
-    } else if (name == "get") {
+    } else if (option == "get") {
         return runGetOption();
-    } else {
-        console::out::err("unknown option: " + name);
-        return false;
     }
-    return true;
+    console::out::err("unknown option: " + option);
+    return false;
 }
 
 bool ConfCommand::runLoadOption() const {
@@ -39,39 +36,42 @@ bool ConfCommand::runSetOption() const {
         console::out::err("invalid command argument");
         return false;
     }
-    const std::string& key{args[1]};
-    const std::string& value{args[2]};
-    console::out::verbose("setting \"" + key + "\" to \"" + value + "\"");
     Config& config{Config::getInstance()};
-    return config.setValue(key, value);
+    return config.setValue(args[1], args[2]);
 }
 
-bool ConfCommand::runUpdateFileOption() const {
+bool ConfCommand::runSaveOption() const {
     Config& config{Config::getInstance()};
-    console::out::inf("updating config file");
     return config.updateFile();
 }
 
 bool ConfCommand::runGetOption() const {
     if (args.size() < 2) {
-        console::out::err("invalid command arguments");
+        console::out::err("invalid command argument");
         return false;
     }
     const std::string& key{args[1]};
     Config& config{Config::getInstance()};
-    console::out::inf(key + ": " + config.getValue(key));
-    console::out::inf(key + " (resolved): " + config.getResolvedValue(key));
+    const std::string value{config.getValue(key)}, resolved_value{config.getResolvedValue(key)};
+    console::out::inf(key + ": " + value);
+    if (value != resolved_value) {
+        console::out::inf(key + " (resolved): " + resolved_value);
+    }
     return true;
 }
 
 bool ConfCommand::runPrintOption() const {
     Config& config{Config::getInstance()};
+    bool first{true};
     for (const auto& section : config.getPropertyTree()) {
+        if (!first) {
+            console::out::inf();
+        }
+        first = false;
         console::out::inf("[" + section.first + "]");
         for (const auto& kv : section.second) {
-            console::out::inf(kv.first + " = " + kv.second.get_value<std::string>());
+            console::out::inf(kv.first + "=" + kv.second.get_value<std::string>());
         }
-        console::out::inf();
     }
     return true;
 }

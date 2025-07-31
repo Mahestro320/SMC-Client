@@ -5,6 +5,8 @@
  * by Mahestro_320
  */
 
+#include "compilation/arch_check.hpp"
+
 #include "common.hpp"
 #include "io/console.hpp"
 #include "network/client.hpp"

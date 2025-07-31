@@ -10,9 +10,17 @@ bool GetUserRoleRH::run() {
     if (!network::sendRequest(socket, RequestId::GetUserRole)) {
         return false;
     }
-    bool is_valid_role{getRole(socket)};
-    bool is_valid_response{checkResponse(socket)};
-    return is_valid_role && is_valid_response;
+    return checkResponse(socket) && getRole(socket);
+}
+
+bool GetUserRoleRH::checkResponse(tcp::socket& socket) const {
+    ResponseId response{network::readResponse(socket)};
+    if (response != ResponseId::Ok) {
+        console::out::err("server returned " + std::to_string(static_cast<uint8_t>(response)) + " (" +
+                          network::response::getName(response) + ")");
+        return false;
+    }
+    return true;
 }
 
 bool GetUserRoleRH::getRole(tcp::socket& socket) {
@@ -24,16 +32,6 @@ bool GetUserRoleRH::getRole(tcp::socket& socket) {
     role = static_cast<Role>(byte);
     console::out::verbose(std::to_string(byte) + " (" + role::getName(role) + ")");
     return role::isValidRole(role);
-}
-
-bool GetUserRoleRH::checkResponse(tcp::socket& socket) const {
-    ResponseId response{network::readResponse(socket)};
-    if (response != ResponseId::Ok) {
-        console::out::err("server returned " + std::to_string(static_cast<uint8_t>(response)) + " (" +
-                          network::response::getName(response) + ")");
-        return false;
-    }
-    return true;
 }
 
 Role GetUserRoleRH::getValue() const {

@@ -1,4 +1,5 @@
 #include "io/console.hpp"
+#include "io/directories.hpp"
 #include "shell/config.hpp"
 #include "util/env_var_str_resolver.hpp"
 
@@ -10,13 +11,13 @@ Config& Config::getInstance() {
 }
 
 bool Config::load() {
-    return loadIniFile() && getValuesFromTree();
+    return loadIniFile() && tryToLoadValuesFromTree();
 }
 
 bool Config::loadIniFile() {
     console::out::inf("loading config file");
     try {
-        boost::property_tree::ini_parser::read_ini(INI_FILE_PATH.string(), property_tree);
+        boost::property_tree::ini_parser::read_ini(dirs::D_CONFIG.string(), property_tree);
     } catch (const boost::property_tree::ini_parser_error& e) {
         console::out::err("error while parsing file: " + std::string{e.what()});
         return false;
@@ -24,20 +25,28 @@ bool Config::loadIniFile() {
     return true;
 }
 
-bool Config::getValuesFromTree() {
+bool Config::tryToLoadValuesFromTree() {
     try {
-        values.server_address = getValueFromTree<std::string>("server.address");
-        values.server_port = getValueFromTree<uint16_t>("server.port");
-        values.client_connect_at_launch = getValueFromTree<bool>("client.connect_at_launch");
-        values.shell_verbose = getValueFromTree<bool>("shell.verbose");
-        values.shell_print_addr_prefix = getValueFromTree<bool>("shell.print_addr_prefix");
-        values.cmd_download_output = getValueFromTree<std::string>("commands.download_output");
-        values.cmd_download_buffer_size = getValueFromTree<uint64_t>("commands.download_buffer_size");
+        loadValuesFromTree();
     } catch (const boost::property_tree::ptree_error& e) {
         console::out::err("error while getting config values from tree: " + std::string{e.what()});
         return false;
     }
     return true;
+}
+
+void Config::loadValuesFromTree() {
+    values.server_address = getValueFromTree<std::string>("server.address");
+    values.server_port = getValueFromTree<uint16_t>("server.port");
+
+    values.client_connect_at_launch = getValueFromTree<bool>("client.connect_at_launch");
+
+    values.shell_verbose = getValueFromTree<bool>("shell.verbose");
+    values.shell_print_addr_prefix = getValueFromTree<bool>("shell.print_addr_prefix");
+
+    values.cmd_download_output = getValueFromTree<std::string>("commands.download_output");
+    values.cmd_download_buffer_size = getValueFromTree<uint64_t>("commands.download_buffer_size");
+    values.cmd_download_del_file_on_stop = getValueFromTree<bool>("commands.download_del_file_on_stop");
 }
 
 template<typename T> T Config::getValueFromTree(const std::string& key) {
@@ -56,7 +65,7 @@ template<typename T> T Config::getValueFromTree(const std::string& key) {
 
 bool Config::updateFile() const {
     try {
-        boost::property_tree::write_ini(INI_FILE_PATH.string(), property_tree);
+        boost::property_tree::write_ini(dirs::D_CONFIG.string(), property_tree);
     } catch (const boost::property_tree::ini_parser_error& e) {
         console::out::err("error while updating file: " + std::string{e.what()});
         return false;
@@ -88,7 +97,7 @@ std::string Config::getResolvedValue(const std::string& key) const {
 
 bool Config::setValue(const std::string& key, const std::string& value) {
     property_tree.put(key, value);
-    return getValuesFromTree();
+    return tryToLoadValuesFromTree();
 }
 
 const boost::property_tree::ptree& Config::getPropertyTree() const {

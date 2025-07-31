@@ -19,21 +19,6 @@ std::string util::string::makeFilledString(uint64_t size, char fill_char) {
     return result;
 }
 
-std::string util::string::byteToAutoUnit(uint64_t num) {
-    if (num < 0x400) {
-        return std::to_string(num) + " b";
-    } else if (num < 0x100000) {
-        return std::to_string(num / 0x400) + " Kb";
-    } else if (num < 0x40000000) {
-        return std::to_string(num / 0x100000) + " Mb";
-    } else if (num < 0x10000000000) {
-        return std::to_string(num / 0x40000000) + " Gb";
-    } else if (num < 0x4000000000000) {
-        return std::to_string(num / 0x10000000000) + " Tb";
-    }
-    return std::to_string(num) + " b";
-}
-
 std::string util::string::secondsToDHMS(uint64_t secs) {
     const uint64_t days{secs / 86400};
     secs %= 86400;
@@ -42,4 +27,8 @@ std::string util::string::secondsToDHMS(uint64_t secs) {
     const uint64_t minutes{secs / 60};
     const uint64_t seconds{secs % 60};
     return std::format("{}:{:02}:{:02}:{:02}", days, hours, minutes, seconds);
+}
+
+std::string util::string::formatFloat(float value, uint64_t precision) {
+    return std::format("{:.{}f}", value, precision);
 }

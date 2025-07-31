@@ -4,8 +4,10 @@
 
 class ClientCommand final : public Command {
   private:
-    exit_code_t runConnectOption();
-    exit_code_t runDisconnectOption();
+    bool runOption(const std::string& option);
+
+    bool runConnectOption();
+    bool runDisconnectOption();
 
   public:
     ClientCommand() = default;

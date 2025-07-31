@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <iostream>
 #include "io/console.hpp"
 #include "shell/config.hpp"

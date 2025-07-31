@@ -1,5 +1,7 @@
 #pragma once
 
+#define _WIN32_WINNT 0x0601
+
 #include <boost/asio.hpp>
 #include <filesystem>
 #include "../handler.hpp"
@@ -16,6 +18,6 @@ class IOGetRealPathRH final : public RH {
 
     bool run() override;
 
-    void setInputPath(const std::filesystem::path& input_path);
+    void setPath(const std::filesystem::path& input_path);
     const std::filesystem::path& getValue() const;
 };

@@ -1,33 +1,78 @@
+#include <cerrno>
+#include <conio.h>
 #include <thread>
 #include "io/console.hpp"
 #include "network/request/handlers/io_get_complete_path.hpp"
 #include "network/request/handlers/io_get_real_path.hpp"
 #include "shell/commands/download.hpp"
 #include "shell/config.hpp"
+#include "shell/system/cursor.hpp"
 #include "util/string.hpp"
 
 namespace fs = std::filesystem;
 
 exit_code_t DownloadCommand::run() {
-    getBufferSize();
-    if (!getRawInputPath() || !getCompleteInputPath() || !getRealInputPath() || !getOutputPath()) {
+    if (!init()) {
         return Error;
+    }
+    initQueue();
+    createThreads();
+    infoLoop();
+    deleteFileInstance();
+    deleteFileIfNeeded();
+    return error_flag.load(std::memory_order_acquire) ? Error : Success;
+}
+
+bool DownloadCommand::init() {
+    loadBufferSize();
+    if (!getInputPath() || !getOutputPath()) {
+        return false;
     }
     console::out::verbose("input path: " + input_path_real.string() + "\noutput path: " + output_path.string());
     if (!beginHandler() || !createOutputFile()) {
-        return Error;
+        return false;
     }
-    createInfoThread();
-    const bool success{startTransmition()};
-    stopInfoThread();
-    deleteFileInstance();
-    return success ? Success : Error;
+    return true;
 }
 
-void DownloadCommand::getBufferSize() {
+void DownloadCommand::initQueue() {
+    queue.setMaxSize(MAX_QUEUE_SIZE);
+}
+
+void DownloadCommand::createThreads() {
+    createWriterThread();
+    createReaderThread();
+    createCancelThread();
+}
+
+void DownloadCommand::deleteFileInstance() {
+    if (output_file) {
+        output_file->close();
+        delete output_file;
+    }
+}
+
+void DownloadCommand::deleteFileIfNeeded() {
+    Config& config{Config::getInstance()};
+    const ConfigValues& config_values{config.getValues()};
+    if (!config_values.cmd_download_del_file_on_stop || !stop_flag.load(std::memory_order_acquire)) {
+        return;
+    }
+    std::error_code ec{};
+    std::filesystem::remove(output_path, ec);
+    if (ec) {
+        console::out::err("error while removing output file: " + ec.message());
+    }
+}
+
+void DownloadCommand::loadBufferSize() {
     const Config& config{Config::getInstance()};
     const ConfigValues& values{config.getValues()};
     buffer_size = values.cmd_download_buffer_size;
+}
+
+bool DownloadCommand::getInputPath() {
+    return getRawInputPath() && readCompleteInputPath() && readRealInputPath();
 }
 
 bool DownloadCommand::getRawInputPath() {
@@ -39,7 +84,7 @@ bool DownloadCommand::getRawInputPath() {
     return true;
 }
 
-bool DownloadCommand::getCompleteInputPath() {
+bool DownloadCommand::readCompleteInputPath() {
     IOGetCompletePathRH handler{};
     handler.setClient(client);
     handler.setPath(input_path_raw);
@@ -47,17 +92,17 @@ bool DownloadCommand::getCompleteInputPath() {
         return false;
     }
     if (!handler.fileExists()) {
-        console::out::err("the target file \"" + input_path_raw.string() + "\" does not exists");
+        console::out::err("target file \"" + input_path_raw.string() + "\" does not exists");
         return false;
     }
     input_path_complete = handler.getValue();
     return true;
 }
 
-bool DownloadCommand::getRealInputPath() {
+bool DownloadCommand::readRealInputPath() {
     IOGetRealPathRH handler{};
     handler.setClient(client);
-    handler.setInputPath(input_path_complete);
+    handler.setPath(input_path_complete);
     if (!handler.run()) {
         return false;
     }
@@ -118,70 +163,144 @@ bool DownloadCommand::beginHandler() {
     return true;
 }
 
-void DownloadCommand::createInfoThread() {
-    std::thread t{[&] {
-        console::out::inf("downloading file...", false);
-        while (!transmition_stopped_flag.load(std::memory_order_acquire)) {
-            std::this_thread::sleep_for(std::chrono::seconds{1});
-            printInfoMessage();
-        }
+void DownloadCommand::infoLoop() {
+    initInfoPrinter();
+    startInfoLoop();
+}
+
+void DownloadCommand::initInfoPrinter() {
+    info_printer.setBufferSize(buffer_size);
+    info_printer.setBufferCount(buffer_count);
+}
+
+void DownloadCommand::startInfoLoop() {
+    console::out::inf("downloading file, press ESC to cancel\n");
+    shell::cursor::setVisible(false);
+    do {
+        printInfoMessage();
+    } while (!transmitionFinished());
+    endInfoLoop();
+    shell::cursor::setVisible(true);
+}
+
+void DownloadCommand::endInfoLoop() {
+    if (stop_flag.load(std::memory_order_acquire) || error_flag.load(std::memory_order_acquire)) {
         console::out::inf();
-        info_thread_stopped_flag.store(true, std::memory_order_release);
-    }};
-    t.detach();
+    } else {
+        printInfoMessageNoWait();
+    }
+    if (is_cancelled_by_esc) {
+        console::out::inf("operation cancelled");
+    }
 }
 
 void DownloadCommand::printInfoMessage() {
-    static uint64_t last_buffer_index{};
-    uint64_t buffer_index{curr_buffer_idx.load(std::memory_order_acquire)};
-    uint64_t percentage{static_cast<uint64_t>(static_cast<float>(buffer_index) / buffer_count * 100.0f)};
-    uint64_t buffer_per_sec{buffer_index - last_buffer_index};
-    uint64_t bytes_per_sec{buffer_per_sec * buffer_size};
-    uint64_t remaining_buffers{buffer_count - buffer_index};
-    uint64_t remaining_time_sec{buffer_per_sec == 0 ? 0 : remaining_buffers / buffer_per_sec};
-    static uint64_t last_remaining_time_sec{};
-    uint64_t remaining_time_sec_avg{
-        last_remaining_time_sec == 0 ? remaining_time_sec : (last_remaining_time_sec - 1 + remaining_time_sec) / 2};
-    std::string str{"downloading file: " + std::to_string(percentage) + "% | " +
-                    util::string::byteToAutoUnit(bytes_per_sec) +
-                    "/s | eta: " + util::string::secondsToDHMS(remaining_time_sec_avg) + " (" +
-                    std::to_string(buffer_index) + "/" + std::to_string(buffer_count) + " buffers)"};
-    static std::string last_str{};
-    console::out::inf("\r" + util::string::makeFilledString(last_str.size()), false);
-    console::out::inf("\r" + str, false);
-    last_str = str;
-    last_remaining_time_sec = remaining_time_sec;
-    last_buffer_index = buffer_index;
+    printInfoMessageNoWait();
+    std::this_thread::sleep_for(std::chrono::seconds{1});
 }
 
-bool DownloadCommand::startTransmition() {
-    const uint64_t buffer_count{handler.getBufferCount()};
-    for (; handler.available(); curr_buffer_idx.fetch_add(1, std::memory_order_release)) {
-        if (!processNextBuffer()) {
-            return false;
+void DownloadCommand::printInfoMessageNoWait() {
+    info_printer.setCurrBufferIndex(curr_buffer_idx.load(std::memory_order_acquire));
+    info_printer.update();
+    info_printer.print();
+}
+
+void DownloadCommand::createReaderThread() {
+    std::thread t{[&] { readerThreadHandle(); }};
+    t.detach();
+}
+
+void DownloadCommand::readerThreadHandle() {
+    bool stopped{};
+    for (; handler.available() && !stopped; curr_buffer_idx.fetch_add(1, std::memory_order_release)) {
+        if (!downloadNextBuffer()) {
+            error_flag.store(true, std::memory_order_release);
+            stopped = true;
+            break;
         }
+        stopped = writer_finished_flag.load(std::memory_order_acquire) || stop_flag.load(std::memory_order_acquire);
     }
-    return true;
+    if (stopped) {
+        stop_flag.store(true, std::memory_order_release);
+        stopHandler();
+    }
+    reader_finished_flag.store(true, std::memory_order_release);
 }
 
-bool DownloadCommand::processNextBuffer() {
+bool DownloadCommand::downloadNextBuffer() {
     if (!handler.downloadNextBuffer()) {
         return false;
     }
-    const std::vector<char>& buffer{handler.getCurrentBuffer()};
-    output_file->write(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+    waitForFreeSpaceInQueue();
+    queue.pushBack(handler.getCurrentBuffer());
+    cv.notify_one();
     return true;
 }
 
-void DownloadCommand::stopInfoThread() {
-    transmition_stopped_flag.store(true, std::memory_order_release);
-    while (!info_thread_stopped_flag.load(std::memory_order_acquire))
-        ;
+void DownloadCommand::stopHandler() {
+    handler.stop();
 }
 
-void DownloadCommand::deleteFileInstance() {
-    if (output_file) {
-        output_file->close();
-        delete output_file;
+void DownloadCommand::waitForFreeSpaceInQueue() {
+    std::unique_lock lock(mtx);
+    cv.wait(lock, [&] { return queue.size() < queue.maxSize(); });
+}
+
+void DownloadCommand::createWriterThread() {
+    std::thread t{[&] { writerThreadHandle(); }};
+    t.detach();
+}
+
+void DownloadCommand::writerThreadHandle() {
+    while (!stop_flag.load(std::memory_order_acquire) &&
+           (!reader_finished_flag.load(std::memory_order_acquire) || !queue.empty())) {
+        waitForQueueToBeFilled();
+        if (!writeNextBuffer()) {
+            stop_flag.store(true, std::memory_order_release);
+            error_flag.store(true, std::memory_order_release);
+            break;
+        }
     }
+    writer_finished_flag.store(true, std::memory_order_release);
+}
+
+void DownloadCommand::waitForQueueToBeFilled() {
+    std::unique_lock lock(mtx);
+    cv.wait(lock, [&] { return !queue.empty(); });
+}
+
+bool DownloadCommand::writeNextBuffer() {
+    std::vector<char> buffer{queue.getAndPopFront()};
+    cv.notify_one();
+    output_file->write(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+    if (!*output_file) {
+        char buffer[1024];
+        strerror_s(buffer, sizeof(buffer), errno);
+        console::out::err("error while writing data into file: " + std::string{buffer});
+        return false;
+    }
+    return true;
+}
+
+void DownloadCommand::createCancelThread() {
+    std::thread t{[&] { cancelThreadHandle(); }};
+    t.detach();
+}
+
+void DownloadCommand::cancelThreadHandle() {
+    while (!stop_flag.load(std::memory_order_acquire) && !reader_finished_flag.load(std::memory_order_acquire) &&
+           !writer_finished_flag.load(std::memory_order_acquire)) {
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
+        if (_kbhit() && _getch() == ESC_KEY) {
+            stop_flag.store(true, std::memory_order_release);
+            is_cancelled_by_esc = true;
+            break;
+        }
+    }
+    cancel_finished_flag.store(true, std::memory_order_release);
+}
+
+bool DownloadCommand::transmitionFinished() {
+    return reader_finished_flag.load(std::memory_order_acquire) &&
+           writer_finished_flag.load(std::memory_order_acquire) && cancel_finished_flag.load(std::memory_order_acquire);
 }

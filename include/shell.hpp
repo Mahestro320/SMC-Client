@@ -22,5 +22,6 @@ class Shell final {
 
     void start();
     void processNewCommand();
+    Client& getClient();
     exit_code_t runCommand(const std::vector<std::string>& command_tokens);
 };

@@ -69,7 +69,16 @@ bool IOGetFileContentRH::available() const {
 
 bool IOGetFileContentRH::downloadNextBuffer() {
     ++curr_buffer_idx;
-    return network::readBuffer(*socket, curr_buffer, true) && network::sendInt<uint8_t>(*socket, NEXT_BUFFER_FLAG);
+    if (!network::readBuffer(*socket, curr_buffer, true) || !network::sendInt<uint8_t>(*socket, NEXT_BUFFER_FLAG)) {
+        console::out::err("error while downloading buffer " + std::to_string(curr_buffer_idx));
+        return false;
+    }
+    return true;
+}
+
+void IOGetFileContentRH::stop() {
+    std::vector<char> unused_buffer{};
+    network::readBuffer(*socket, unused_buffer, true) && network::sendInt<uint8_t>(*socket, STOP_FLAG);
 }
 
 uint64_t IOGetFileContentRH::getBufferCount() const {

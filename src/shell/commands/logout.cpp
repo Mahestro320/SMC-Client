@@ -9,6 +9,6 @@ exit_code_t LogoutCommand::run() {
         return Error;
     }
     client->setLogged(false);
-    client->setUser({});
+    client->setUser(User{});
     return Success;
 }

@@ -35,7 +35,7 @@ bool IOGetRealPathRH::getRealPath(boost::asio::ip::tcp::socket& socket) {
     return true;
 }
 
-void IOGetRealPathRH::setInputPath(const std::filesystem::path& input_path) {
+void IOGetRealPathRH::setPath(const std::filesystem::path& input_path) {
     this->input_path = input_path;
 }
 

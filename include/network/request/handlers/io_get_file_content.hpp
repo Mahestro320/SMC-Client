@@ -1,12 +1,15 @@
 #pragma once
 
+#define _WIN32_WINNT 0x0601
+
 #include <boost/asio.hpp>
 #include <filesystem>
 #include "../handler.hpp"
 
 class IOGetFileContentRH final : public RH {
   private:
-    static inline constexpr uint8_t NEXT_BUFFER_FLAG{0xAB};
+    static inline constexpr uint8_t NEXT_BUFFER_FLAG{0x00};
+    static inline constexpr uint8_t STOP_FLAG{0xFF};
 
     uint64_t buffer_size{}, buffer_count{};
     uint64_t file_size{};
@@ -29,6 +32,7 @@ class IOGetFileContentRH final : public RH {
     bool run() override;
     bool available() const;
     bool downloadNextBuffer();
+    void stop();
 
     void setBufferSize(uint64_t size);
     void setPath(const std::filesystem::path& path);

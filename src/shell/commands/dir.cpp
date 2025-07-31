@@ -3,6 +3,7 @@
 #include "network/client.hpp"
 #include "network/request/handlers/io_get_dir_content.hpp"
 #include "shell/commands/dir.hpp"
+#include "util/byte.hpp"
 #include "util/string.hpp"
 
 using boost::asio::ip::tcp;
@@ -28,13 +29,13 @@ void DirCommand::printData() const {
     console::out::inf(" | type " + util::string::makeFilledString(TYPE_SPACES_COUNT - 9) + " | size " +
                       util::string::makeFilledString(TYPE_SPACES_COUNT - 10) + " | name\n");
     if (data.empty()) {
-        console::out::inf("   (empty)");
+        console::out::inf("\t(empty)");
         return;
     }
     for (const FileInfo& file : data) {
         const std::string type_str{file_type::getName(file.type)};
-        const std::string size_str{file.type == FileType::File ? util::string::byteToAutoUnit(file.size) : ""};
-        console::out::inf("   " + type_str + util::string::makeFilledString(TYPE_SPACES_COUNT - type_str.size()) +
+        const std::string size_str{file.type == FileType::File ? util::byte::toAutoUnit(file.size) : ""};
+        console::out::inf("\t" + type_str + util::string::makeFilledString(TYPE_SPACES_COUNT - type_str.size()) +
                           size_str + util::string::makeFilledString(SIZE_SPACES_COUNT - size_str.size()) + file.name);
     }
 }

@@ -10,6 +10,8 @@ class IOGetCompletePathRH final : public RH {
     bool error{};
     IOFileExistsRH handler{};
 
+    bool checkIfPathIsRelative();
+    bool checkIfPathIsAbsolute();
     bool isPathRelative();
     bool isPathAbsolute();
 

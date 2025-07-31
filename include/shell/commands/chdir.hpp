@@ -4,14 +4,16 @@
 
 class ChdirCommand final : public Command {
   private:
-    std::filesystem::path target_path{};
-    std::filesystem::path target_path_valid{};
+    std::filesystem::path target_path_raw{};
+    std::filesystem::path target_path_complete{};
+    std::filesystem::path target_path_real{};
 
-    bool getTargetPath();
-    bool getCompletePath();
-    bool isFileDirectory() const;
-    void setNewUserCurrentDir();
-    bool setUserCurrentDirRealPath();
+    bool getInputPath();
+    bool getRawInputPath();
+    bool readCompleteInputPath();
+    bool readRealInputPath();
+    bool isInputPathDirectory() const;
+    void setNewCurrentDir();
 
   public:
     ChdirCommand() = default;

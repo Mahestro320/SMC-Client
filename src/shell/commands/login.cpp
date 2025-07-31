@@ -1,6 +1,5 @@
 #include "io/console.hpp"
 #include "network/client.hpp"
-#include "network/request/handlers/login.hpp"
 #include "shell/commands/login.hpp"
 
 using boost::asio::ip::tcp;
@@ -9,19 +8,30 @@ exit_code_t LoginCommand::run() {
     if (!getArgumentsValues()) {
         return Error;
     }
-    LoginRH handler{};
+    return login() ? Success : Error;
+}
+
+bool LoginCommand::login() {
+    if (!getConnectedUser()) {
+        return false;
+    }
+    client->setUser(*connected_user);
+    client->setLogged(true);
+    console::out::verbose("-> ", false);
+    console::out::inf("successfully connected as " + connected_user->name + " (" + role::getName(connected_user->role) +
+                      ")");
+    return true;
+}
+
+bool LoginCommand::getConnectedUser() {
     handler.setClient(client);
     handler.setUsername(username);
     handler.setPassword(password);
     if (!handler.run()) {
-        return Error;
+        return false;
     }
-    const User& user{handler.getFinalUser()};
-    client->setUser(user);
-    client->setLogged(true);
-    console::out::verbose("-> ", false);
-    console::out::inf("successfully connected as " + user.name + " (" + role::getName(user.role) + ")");
-    return Success;
+    connected_user = &handler.getConnectedUser();
+    return true;
 }
 
 bool LoginCommand::getArgumentsValues() {

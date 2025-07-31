@@ -4,7 +4,8 @@
 
 namespace dirs {
 
-const auto ROOT{std::filesystem::current_path()};
-const auto DATA{ROOT / "data"};
+inline const auto ROOT{std::filesystem::current_path()};
+inline const auto DATA{ROOT / "data"};
+inline const auto D_CONFIG{DATA / "config.ini"};
 
 }; // namespace dirs

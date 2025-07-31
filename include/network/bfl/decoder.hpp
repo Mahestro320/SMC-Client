@@ -9,13 +9,13 @@ class BFLDecoder {
     std::vector<char> bfl{};
     std::vector<FileInfo> data{};
 
-    uint64_t file_count{};
-    uint64_t current_offset{};
+    size_t file_count{};
+    size_t current_offset{};
 
     bool getFileCount();
     bool decodeFile();
     bool getFileType(FileType& type);
-    bool getFileSize(uint64_t& size);
+    bool getFileSize(size_t& size);
     bool getFileName(std::string& name);
 
   public:

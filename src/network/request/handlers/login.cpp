@@ -12,11 +12,7 @@ bool LoginRH::run() {
     if (!network::sendRequest(socket, RequestId::Login)) {
         return false;
     }
-    console::out::verbose("sending username and password");
-    if (!sendUserInfos(socket)) {
-        return false;
-    }
-    if (!checkResponse(socket) || !getUserRole()) {
+    if (!sendUserInfos(socket) || !checkResponse(socket) || !getUserRole()) {
         return false;
     }
     buildUser();
@@ -24,6 +20,7 @@ bool LoginRH::run() {
 }
 
 bool LoginRH::sendUserInfos(tcp::socket& socket) const {
+    console::out::verbose("sending username and password");
     return network::sendString(socket, final_user.name) && network::sendString(socket, final_user.password);
 }
 
@@ -48,6 +45,8 @@ bool LoginRH::getUserRole() {
 }
 
 void LoginRH::buildUser() {
+#pragma warning(push)
+#pragma warning(disable : 26813)
     if (final_user.role == Role::User) {
         final_user.current_dir = fs::path{"perso." + final_user.name};
     } else if (final_user.role == Role::Admin) {
@@ -55,6 +54,7 @@ void LoginRH::buildUser() {
     } else if (final_user.role == Role::Developer) {
         final_user.current_dir = fs::path{"C:\\"};
     }
+#pragma warning(pop)
 }
 
 void LoginRH::setUsername(std::string username) {
@@ -65,6 +65,6 @@ void LoginRH::setPassword(std::string password) {
     final_user.password = password;
 }
 
-const User& LoginRH::getFinalUser() const {
+const User& LoginRH::getConnectedUser() const {
     return final_user;
 }

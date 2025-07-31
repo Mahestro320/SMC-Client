@@ -1,4 +1,4 @@
-#include "common.hpp"
+#include "constants.hpp"
 #include "io/console.hpp"
 #include "network/client.hpp"
 #include "shell.hpp"
@@ -16,6 +16,7 @@
 #include "shell/commands/quit.hpp"
 #include "shell/commands_infos.hpp"
 #include "shell/config.hpp"
+#include "shell/system/signal.hpp"
 #include "util/string.hpp"
 
 using boost::asio::ip::tcp;
@@ -24,8 +25,9 @@ Shell::Shell(Client& client) : client{client} {
 }
 
 void Shell::start() {
-    console::out::inf("SMC (Super Mega Cool) Client Shell v" + common::VERSION.toString() +
-                      " by Mahestro_320\ntype \"help\" for help");
+    shell::signal::setSignals(this);
+    console::out::inf("SMC (Super Mega Cool) Client Shell v" + constants::VERSION.toString() +
+                      " by Mahestro_320, type \"help\" for help");
 }
 
 void Shell::processNewCommand() {
@@ -123,6 +125,10 @@ Command* Shell::getCommandInstanceFromName(const std::string& name) const {
         return new DownloadCommand{};
     }
     return nullptr;
+}
+
+Client& Shell::getClient() {
+    return client;
 }
 
 std::vector<std::string> Shell::getArgsFromTokens(std::vector<std::string> tokens) const {

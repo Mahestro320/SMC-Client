@@ -4,22 +4,35 @@
 
 bool IOGetCompletePathRH::run() {
     handler.setClient(client);
-    if (isPathRelative()) {
-        does_file_exists = true;
-        output_path = input_path_relative;
+    if (checkIfPathIsRelative()) {
         return true;
-    }
-    if (error) {
+    } else if (error) {
+        return false;
+    } else if (!checkIfPathIsAbsolute()) {
         return false;
     }
+    return true;
+}
+
+bool IOGetCompletePathRH::checkIfPathIsRelative() {
+    if (!isPathRelative()) {
+        return false;
+    }
+    does_file_exists = true;
+    output_path = input_path_relative;
+    console::out::verbose("complete path: " + output_path.string());
+    return true;
+}
+bool IOGetCompletePathRH::checkIfPathIsAbsolute() {
     if (!isPathAbsolute()) {
         if (!error) {
-            console::out::inf("the path does not exists");
+            console::out::err("the path does not exists");
         }
-        return error;
+        return false;
     }
     does_file_exists = true;
     output_path = input_path_absolute;
+    console::out::verbose("complete path: " + output_path.string());
     return true;
 }
 

@@ -7,26 +7,24 @@ exit_code_t ClientCommand::run() {
         console::out::inf("invalid command arguments");
         return Error;
     }
-    if (args[0] == "connect") {
+    return runOption(args[0]) ? Success : Error;
+}
+
+bool ClientCommand::runOption(const std::string& option) {
+    if (option == "connect") {
         return runConnectOption();
-    } else if (args[0] == "disconnect") {
+    } else if (option == "disconnect") {
         return runDisconnectOption();
-    } else {
-        console::out::err("unknown option: " + std::string(args[0]));
-        return false;
     }
-    return Success;
+    console::out::err("unknown option: " + option);
+    return false;
 }
 
-exit_code_t ClientCommand::runConnectOption() {
-    if (!client->connect()) {
-        return Error;
-    }
-    console::out::inf("successfully connected to server");
-    return Success;
+bool ClientCommand::runConnectOption() {
+    return client->connect();
 }
 
-exit_code_t ClientCommand::runDisconnectOption() {
+bool ClientCommand::runDisconnectOption() {
     client->close();
-    return Success;
+    return true;
 }

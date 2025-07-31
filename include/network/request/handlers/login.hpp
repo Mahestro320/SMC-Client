@@ -1,5 +1,7 @@
 #pragma once
 
+#define _WIN32_WINNT 0x0601
+
 #include <boost/asio.hpp>
 #include "../handler.hpp"
 #include "user.hpp"
@@ -21,5 +23,5 @@ class LoginRH final : public RH {
     void setUsername(std::string username);
     void setPassword(std::string password);
 
-    const User& getFinalUser() const;
+    const User& getConnectedUser() const;
 };

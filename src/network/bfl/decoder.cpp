@@ -10,7 +10,7 @@ bool BFLDecoder::decode() {
     if (!getFileCount()) {
         return false;
     }
-    for (uint64_t i{0}; i < file_count; ++i) {
+    for (size_t i{0}; i < file_count; ++i) {
         if (!decodeFile()) {
             return false;
         }
@@ -24,7 +24,13 @@ bool BFLDecoder::getFileCount() {
         console::out::err("can't get file count: invalid size");
         return false;
     }
+#if SIZE_MAX == UINT64_MAX
     std::memcpy(&file_count, bfl.data() + current_offset, sizeof(uint64_t));
+#else
+    uint64_t file_count_64{};
+    std::memcpy(&file_count_64, bfl.data() + current_offset, sizeof(uint64_t));
+    file_count = static_cast<size_t>(file_count_64);
+#endif
     current_offset += sizeof(uint64_t);
     return true;
 }
@@ -48,12 +54,18 @@ bool BFLDecoder::getFileType(FileType& type) {
     return true;
 }
 
-bool BFLDecoder::getFileSize(uint64_t& size) {
+bool BFLDecoder::getFileSize(size_t& size) {
     if (bfl.size() < current_offset + sizeof(uint64_t)) {
         console::out::err("can't get file name size: invalid size");
         return false;
     }
+#if SIZE_MAX == UINT64_MAX
     std::memcpy(&size, bfl.data() + current_offset, sizeof(uint64_t));
+#else
+    uint64_t size_64{};
+    std::memcpy(&size_64, bfl.data() + current_offset, sizeof(uint64_t));
+    size = static_cast<size_t>(size_64);
+#endif
     current_offset += sizeof(uint64_t);
     return true;
 }
@@ -63,8 +75,14 @@ bool BFLDecoder::getFileName(std::string& name) {
         console::out::err("can't get file name size: invalid size");
         return false;
     }
-    uint64_t name_size{};
+    size_t name_size{};
+#if SIZE_MAX == UINT64_MAX
     std::memcpy(&name_size, bfl.data() + current_offset, sizeof(uint64_t));
+#else
+    uint64_t name_size_64{};
+    std::memcpy(&name_size_64, bfl.data() + current_offset, sizeof(uint64_t));
+    name_size = static_cast<size_t>(name_size_64);
+#endif
     current_offset += sizeof(uint64_t);
     if (bfl.size() < current_offset + name_size) {
         console::out::err("can't get file name: invalid size");
