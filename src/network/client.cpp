@@ -1,5 +1,6 @@
-#include "io/console.hpp"
 #include "network/client.hpp"
+
+#include "io/console.hpp"
 #include "shell/config.hpp"
 
 using boost::asio::ip::tcp;

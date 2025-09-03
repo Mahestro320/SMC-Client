@@ -1,6 +1,7 @@
+#include "network/request/handlers/io_get_complete_path.hpp"
+
 #include "io/console.hpp"
 #include "network/client.hpp"
-#include "network/request/handlers/io_get_complete_path.hpp"
 
 bool IOGetCompletePathRH::run() {
     handler.setClient(client);
@@ -23,6 +24,7 @@ bool IOGetCompletePathRH::checkIfPathIsRelative() {
     console::out::verbose("complete path: " + output_path.string());
     return true;
 }
+
 bool IOGetCompletePathRH::checkIfPathIsAbsolute() {
     if (!isPathAbsolute()) {
         if (!error) {

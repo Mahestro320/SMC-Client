@@ -1,7 +1,8 @@
+#include "network/request/handlers/io_get_file_type.hpp"
+
 #include "io/console.hpp"
 #include "network.hpp"
 #include "network/client.hpp"
-#include "network/request/handlers/io_get_file_type.hpp"
 
 namespace fs = std::filesystem;
 using boost::asio::ip::tcp;

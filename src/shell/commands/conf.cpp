@@ -1,13 +1,13 @@
-#include "io/console.hpp"
 #include "shell/commands/conf.hpp"
+
+#include "io/console.hpp"
 #include "shell/config.hpp"
 
 exit_code_t ConfCommand::run() {
     if (args.empty()) {
-        console::out::err("invalid command argument");
-        return Error;
+        return InvalidArgs;
     }
-    return runOption(args[0]) ? Success : Error;
+    return (runOption(args[0])) ? Success : Error;
 }
 
 bool ConfCommand::runOption(const std::string& option) {

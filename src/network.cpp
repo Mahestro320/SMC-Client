@@ -1,5 +1,5 @@
-#include "io/console.hpp"
 #include "network.hpp"
+
 #include "network/request/handlers/io_file_exists.hpp"
 
 using boost::asio::ip::tcp;
@@ -21,13 +21,7 @@ bool network::sendRequest(tcp::socket& socket, RequestId id, bool silent) {
     if (!sendInt<uint8_t>(socket, byte)) {
         return false;
     }
-    const ResponseId response_id{readResponse(socket)};
-    if (response_id != ResponseId::Ok) {
-        console::out::err("server returned " + std::to_string(static_cast<uint8_t>(response_id)) + " (" +
-                          response::getName(response_id) + ")");
-        return false;
-    }
-    return true;
+    return checkResponse(socket);
 }
 
 bool network::sendString(tcp::socket& socket, const std::string& str, bool silent) {
@@ -107,26 +101,11 @@ bool network::readBuffer(tcp::socket& socket, std::vector<char>& buffer, bool si
     return true;
 }
 
-template<std::integral T> bool network::sendInt(tcp::socket& socket, T data) {
-    boost::system::error_code error_code{};
-    boost::asio::write(socket, boost::asio::buffer(&data, sizeof(T)), error_code);
-    if (error_code) {
-        console::out::err("error while sending int: " + error_code.message());
-        return false;
+bool network::checkResponse(tcp::socket& socket, bool silent) {
+    const ResponseId response{readResponse(socket, silent)};
+    if (response != ResponseId::Ok && !silent) {
+        console::out::err("server returned " + std::to_string(static_cast<uint8_t>(response)) + " (" +
+                          network::response::getName(response) + ')');
     }
-    return true;
-}
-
-template<std::integral T> bool network::readInt(tcp::socket& socket, T& data) {
-    boost::system::error_code error_code{};
-    const size_t bytes_read{boost::asio::read(socket, boost::asio::buffer(&data, sizeof(T)), error_code)};
-    if (error_code) {
-        console::out::err("error while reading int: " + error_code.message());
-        return false;
-    }
-    if (bytes_read < sizeof(T)) {
-        console::out::err("the int isn't fully readed !");
-        return false;
-    }
-    return true;
+    return response == ResponseId::Ok;
 }

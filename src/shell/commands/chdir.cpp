@@ -1,14 +1,18 @@
+#include "shell/commands/chdir.hpp"
+
 #include "io/console.hpp"
 #include "network/client.hpp"
 #include "network/request/handlers/io_get_complete_path.hpp"
 #include "network/request/handlers/io_get_file_type.hpp"
 #include "network/request/handlers/io_get_real_path.hpp"
-#include "shell/commands/chdir.hpp"
 #include "user.hpp"
 
 namespace fs = std::filesystem;
 
-exit_code_t ChdirCommand::run() {
+exit_code_t ChDirCommand::run() {
+    if (args.empty()) {
+        return InvalidArgs;
+    }
     if (!getInputPath() || !isInputPathDirectory()) {
         return Error;
     }
@@ -16,20 +20,16 @@ exit_code_t ChdirCommand::run() {
     return Success;
 }
 
-bool ChdirCommand::getInputPath() {
-    return getRawInputPath() && readCompleteInputPath() && readRealInputPath();
+bool ChDirCommand::getInputPath() {
+    getRawInputPath();
+    return readCompleteInputPath() && readRealInputPath();
 }
 
-bool ChdirCommand::getRawInputPath() {
-    if (args.empty()) {
-        console::out::err("invalid command argument");
-        return false;
-    }
+void ChDirCommand::getRawInputPath() {
     target_path_raw = fs::path{args[0]};
-    return true;
 }
 
-bool ChdirCommand::readCompleteInputPath() {
+bool ChDirCommand::readCompleteInputPath() {
     IOGetCompletePathRH handler{};
     handler.setClient(client);
     handler.setPath(target_path_raw);
@@ -40,7 +40,7 @@ bool ChdirCommand::readCompleteInputPath() {
     return true;
 }
 
-bool ChdirCommand::readRealInputPath() {
+bool ChDirCommand::readRealInputPath() {
     IOGetRealPathRH handler{};
     handler.setClient(client);
     handler.setPath(target_path_complete);
@@ -51,7 +51,7 @@ bool ChdirCommand::readRealInputPath() {
     return true;
 }
 
-bool ChdirCommand::isInputPathDirectory() const {
+bool ChDirCommand::isInputPathDirectory() const {
     IOGetFileTypeRH handler{};
     handler.setClient(client);
     handler.setPath(target_path_real);
@@ -66,7 +66,7 @@ bool ChdirCommand::isInputPathDirectory() const {
     return true;
 }
 
-void ChdirCommand::setNewCurrentDir() {
+void ChDirCommand::setNewCurrentDir() {
     User& user{client->getUser()};
     user.current_dir = target_path_real.lexically_normal();
     const std::string current_dir_str{user.current_dir.generic_string()};

@@ -1,6 +1,7 @@
+#include "network/bfl/communicator.hpp"
+
 #include "io/console.hpp"
 #include "network.hpp"
-#include "network/bfl/communicator.hpp"
 #include "network/bfl/decoder.hpp"
 #include "network/client.hpp"
 

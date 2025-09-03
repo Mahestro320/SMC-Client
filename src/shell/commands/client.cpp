@@ -1,13 +1,13 @@
+#include "shell/commands/client.hpp"
+
 #include "io/console.hpp"
 #include "network/client.hpp"
-#include "shell/commands/client.hpp"
 
 exit_code_t ClientCommand::run() {
     if (args.empty()) {
-        console::out::inf("invalid command arguments");
-        return Error;
+        return InvalidArgs;
     }
-    return runOption(args[0]) ? Success : Error;
+    return (runOption(args[0])) ? Success : Error;
 }
 
 bool ClientCommand::runOption(const std::string& option) {

@@ -1,7 +1,8 @@
+#include "shell.hpp"
+
 #include "constants.hpp"
 #include "io/console.hpp"
 #include "network/client.hpp"
-#include "shell.hpp"
 #include "shell/command_line.hpp"
 #include "shell/commands/chdir.hpp"
 #include "shell/commands/clear.hpp"
@@ -13,11 +14,17 @@
 #include "shell/commands/infos.hpp"
 #include "shell/commands/login.hpp"
 #include "shell/commands/logout.hpp"
+#include "shell/commands/mkdir.hpp"
+#include "shell/commands/mkfile.hpp"
+#include "shell/commands/print.hpp"
 #include "shell/commands/quit.hpp"
+#include "shell/commands/syscmd.hpp"
+#include "shell/commands/upload.hpp"
 #include "shell/commands_infos.hpp"
 #include "shell/config.hpp"
 #include "shell/system/signal.hpp"
 #include "util/string.hpp"
+#include "util/time.hpp"
 
 using boost::asio::ip::tcp;
 
@@ -26,31 +33,28 @@ Shell::Shell(Client& client) : client{client} {
 
 void Shell::start() {
     shell::signal::setSignals(this);
-    console::out::inf("SMC (Super Mega Cool) Client Shell v" + constants::VERSION.toString() +
-                      " by Mahestro_320, type \"help\" for help");
+    console::out::inf(constants::INFO_MESSAGE + ", type \"help\" for help");
 }
 
 void Shell::processNewCommand() {
     console::out::inf(getCommandInputStartInfo() + "> ", false);
-    CommandLine command{};
-    if (!command.getLine()) {
-        console::out::inf();
-    }
-    if (command.empty()) {
-        return;
-    }
-    command.tokenize();
-    const std::vector<std::string>& command_tokens{command.getTokens()};
+    const std::vector<std::string> command_tokens{getCommandTokens()};
     if (command_tokens.empty()) {
         return;
     }
     const exit_code_t code{runCommand(command_tokens)};
-    if (code != Success) {
-        console::out::inf("command finished with exit code " + std::to_string(code) +
-                          (code == Error ? " (Error)" : ""));
-    }
+    printFinalCmdMessage(code);
     console::out::inf();
     return;
+}
+
+std::vector<std::string> Shell::getCommandTokens() {
+    CommandLine command_line{};
+    if (!command_line.getLine() || command_line.empty()) {
+        return {};
+    }
+    command_line.tokenize();
+    return command_line.getTokens();
 }
 
 exit_code_t Shell::runCommand(const std::vector<std::string>& command_tokens) {
@@ -67,7 +71,9 @@ exit_code_t Shell::runCommand(const std::vector<std::string>& command_tokens) {
     }
     command->setArgs(args);
     command->setClient(&client);
+    uint64_t start_time{util::time::getMillis()};
     const exit_code_t code{command->run()};
+    command_time = static_cast<float>(util::time::getMillis() - start_time) / 1000.0f;
     delete command;
     return code;
 }
@@ -111,6 +117,8 @@ Command* Shell::getCommandInstanceFromName(const std::string& name) const {
         return new QuitCommand{};
     } else if (name == "conf") {
         return new ConfCommand{};
+    } else if (name == "print") {
+        return new PrintCommand{};
     } else if (name == "login" || name == "lgi") {
         return new LoginCommand{};
     } else if (name == "logout" || name == "lgo") {
@@ -120,9 +128,17 @@ Command* Shell::getCommandInstanceFromName(const std::string& name) const {
     } else if (name == "dir") {
         return new DirCommand{};
     } else if (name == "chdir" || name == "cd") {
-        return new ChdirCommand{};
+        return new ChDirCommand{};
     } else if (name == "download" || name == "dwl") {
         return new DownloadCommand{};
+    } else if (name == "upload" || name == "upl") {
+        return new UploadCommand{};
+    } else if (name == "syscmd" || name == "scm") {
+        return new SyscmdCommand{};
+    } else if (name == "mkfile" || name == "mf") {
+        return new MkFileCommand{};
+    } else if (name == "mkdir" || name == "md") {
+        return new MkDirCommand{};
     }
     return nullptr;
 }
@@ -145,9 +161,29 @@ std::string Shell::getCommandInputStartInfo() const {
     const std::string addr_prefix{config_values.server_address + ":" + std::to_string(config_values.server_port) +
                                   " -> "};
     if (!client.isLogged()) {
-        return (config_values.shell_print_addr_prefix ? addr_prefix : "") + "NOT_LOGGED";
+        return ((config_values.shell_print_addr_prefix) ? addr_prefix : "") + "NOT_LOGGED";
     }
     const User& user{client.getUser()};
-    return (config_values.shell_print_addr_prefix ? addr_prefix : "") + user.name + " @" +
-           (user.current_dir.empty() ? "." : user.current_dir.string());
+    return ((config_values.shell_print_addr_prefix) ? addr_prefix : "") + user.name + " @" +
+           ((user.current_dir.empty()) ? "." : user.current_dir.string());
+}
+
+void Shell::printFinalCmdMessage(exit_code_t code) const {
+    if (code == ExitCode::Silent) {
+        return;
+    }
+    if (code == ExitCode::InvalidArgs) {
+        console::out::err("invalid command arguments");
+        return;
+    }
+    std::string message_ext{};
+    if (code == ExitCode::Error) {
+        message_ext = "with exit code " + std::to_string(code) + " (Error)";
+    } else if (code != ExitCode::Success) {
+        message_ext = "with exit code " + std::to_string(code);
+    }
+    console::out::inf("\ncommand finished in " +
+                      ((command_time < 1.0f) ? std::to_string(static_cast<int>(command_time * 1000.0f)) + "ms "
+                                             : util::string::formatFloat(command_time, 3) + "s ") +
+                      message_ext);
 }

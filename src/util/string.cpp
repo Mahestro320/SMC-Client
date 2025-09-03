@@ -1,8 +1,9 @@
-#include <format>
 #include "util/string.hpp"
 
+#include <format>
+
 std::string util::string::boolToYesOrNo(bool boolean) {
-    return boolean ? "yes" : "no";
+    return (boolean) ? "yes" : "no";
 }
 
 void util::string::toLowercase(std::string& string) {

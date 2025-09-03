@@ -1,5 +1,6 @@
-#include <unordered_map>
 #include "user/role.hpp"
+
+#include <unordered_map>
 
 namespace {
 
@@ -13,7 +14,7 @@ const std::unordered_map<Role, std::string> role_names{
 } // namespace
 
 std::string role::getName(Role role) {
-    return isValidRole(role) ? role_names.at(role) : "UNKNOWN";
+    return (isValidRole(role)) ? role_names.at(role) : "UNKNOWN";
 }
 
 bool role::isValidRole(Role role) {

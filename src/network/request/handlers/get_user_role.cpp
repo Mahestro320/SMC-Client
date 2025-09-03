@@ -1,7 +1,8 @@
+#include "network/request/handlers/get_user_role.hpp"
+
 #include "io/console.hpp"
 #include "network.hpp"
 #include "network/client.hpp"
-#include "network/request/handlers/get_user_role.hpp"
 
 using boost::asio::ip::tcp;
 
@@ -10,17 +11,7 @@ bool GetUserRoleRH::run() {
     if (!network::sendRequest(socket, RequestId::GetUserRole)) {
         return false;
     }
-    return checkResponse(socket) && getRole(socket);
-}
-
-bool GetUserRoleRH::checkResponse(tcp::socket& socket) const {
-    ResponseId response{network::readResponse(socket)};
-    if (response != ResponseId::Ok) {
-        console::out::err("server returned " + std::to_string(static_cast<uint8_t>(response)) + " (" +
-                          network::response::getName(response) + ")");
-        return false;
-    }
-    return true;
+    return network::checkResponse(socket) && getRole(socket);
 }
 
 bool GetUserRoleRH::getRole(tcp::socket& socket) {

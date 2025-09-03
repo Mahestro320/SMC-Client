@@ -1,7 +1,8 @@
+#include "network/request/handlers/io_file_exists.hpp"
+
 #include "io/console.hpp"
 #include "network.hpp"
 #include "network/client.hpp"
-#include "network/request/handlers/io_file_exists.hpp"
 
 namespace fs = std::filesystem;
 using boost::asio::ip::tcp;
@@ -25,7 +26,8 @@ bool IOFileExistsRH::processResponse(ResponseId id) {
     } else if (id == ResponseId::IOFileNotExists) {
         does_file_exists = false;
     } else {
-        console::out::err("unknown response");
+        console::out::err("server returned " + std::to_string(static_cast<uint8_t>(id)) + " (" +
+                          network::response::getName(id) + ')');
         return false;
     }
     return true;

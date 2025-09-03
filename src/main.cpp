@@ -1,11 +1,11 @@
 /*
  * SMC Client (Super Mega Cool Client)
- * created the 18/06/25
+ * created the 18/06/25 (DD/MM/YY)
  *
  * by Mahestro_320
  */
 
-#include "compilation/arch_check.hpp"
+#include "system/beg.hpp"
 
 #include "common.hpp"
 #include "io/console.hpp"

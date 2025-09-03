@@ -1,35 +1,24 @@
-#include "io/console.hpp"
 #include "shell/command_line.hpp"
+
+#include "io/console.hpp"
 #include "util/env_var_str_resolver.hpp"
 
 bool CommandLine::getLine() {
     std::string line{console::in::getLine()};
     EnvVarStrResolver resolver{};
     resolver.setInput(line);
-    if (!resolver.resolve()) {
-        return false;
-    }
+    resolver.resolve();
     raw_line = resolver.getOutput();
     return true;
 }
 
 void CommandLine::tokenize() {
-    std::string current_item{};
-    bool is_in_quotes{};
-    char last{};
     for (char c : raw_line) {
-        if (c == '"') {
-            is_in_quotes = !is_in_quotes;
-            if (last == '"') {
-                tokenized_line.push_back("");
-            } else {
-                flushToken(current_item);
-            }
+        if (processSimpleQuotes(c) || processDoubleQuotes(c)) {
             last = c;
             continue;
         }
-
-        if (is_in_quotes || !std::isspace(static_cast<unsigned char>(c))) {
+        if (is_in_simple_quotes || is_in_double_quotes || !std::isspace(static_cast<unsigned char>(c))) {
             current_item += c;
         } else {
             flushToken(current_item);
@@ -37,6 +26,32 @@ void CommandLine::tokenize() {
         last = c;
     }
     flushToken(current_item);
+}
+
+bool CommandLine::processSimpleQuotes(char c) {
+    if (c != '\'' || is_in_double_quotes) {
+        return false;
+    }
+    is_in_simple_quotes = !is_in_simple_quotes;
+    if (last == '\'') {
+        tokenized_line.push_back("");
+    } else {
+        flushToken(current_item);
+    }
+    return true;
+}
+
+bool CommandLine::processDoubleQuotes(char c) {
+    if (c != '"' || is_in_simple_quotes) {
+        return false;
+    }
+    is_in_double_quotes = !is_in_double_quotes;
+    if (last == '"') {
+        tokenized_line.push_back("");
+    } else {
+        flushToken(current_item);
+    }
+    return true;
 }
 
 void CommandLine::flushToken(std::string& item) {

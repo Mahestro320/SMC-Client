@@ -1,5 +1,6 @@
-#include <windows.h>
 #include "shell/system/cursor.hpp"
+
+#include <windows.h>
 
 Vector2<int16_t> shell::cursor::getPosition() {
     CONSOLE_SCREEN_BUFFER_INFO csbi{};

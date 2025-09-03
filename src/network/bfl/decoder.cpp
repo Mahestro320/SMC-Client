@@ -1,5 +1,6 @@
-#include "io/console.hpp"
 #include "network/bfl/decoder.hpp"
+
+#include "io/console.hpp"
 
 void BFLDecoder::setBFL(const std::vector<char>& bfl) {
     this->bfl = bfl;

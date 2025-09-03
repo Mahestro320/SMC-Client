@@ -1,6 +1,8 @@
+#include "shell/config.hpp"
+
+#include "common.hpp"
 #include "io/console.hpp"
 #include "io/directories.hpp"
-#include "shell/config.hpp"
 #include "util/env_var_str_resolver.hpp"
 
 using boost::property_tree::ptree;
@@ -45,8 +47,8 @@ void Config::loadValuesFromTree() {
     values.shell_print_addr_prefix = getValueFromTree<bool>("shell.print_addr_prefix");
 
     values.cmd_download_output = getValueFromTree<std::string>("commands.download_output");
-    values.cmd_download_buffer_size = getValueFromTree<uint64_t>("commands.download_buffer_size");
-    values.cmd_download_del_file_on_stop = getValueFromTree<bool>("commands.download_del_file_on_stop");
+    values.cmd_download_buffer_size = getValueFromTree<uint16_t>("commands.download_buffer_size");
+    values.cmd_upload_buffer_size = getValueFromTree<uint16_t>("commands.upload_buffer_size");
 }
 
 template<typename T> T Config::getValueFromTree(const std::string& key) {
@@ -54,9 +56,7 @@ template<typename T> T Config::getValueFromTree(const std::string& key) {
         const std::string raw_val{property_tree.get<std::string>(key)};
         EnvVarStrResolver resolver{};
         resolver.setInput(raw_val);
-        if (!resolver.resolve()) {
-            throw std::runtime_error{"error while resolving key " + key};
-        }
+        resolver.resolve();
         return resolver.getOutput();
     } else {
         return property_tree.get<T>(key);
@@ -79,19 +79,17 @@ const ConfigValues& Config::getValues() const {
 
 std::string Config::getValue(const std::string& key) const {
     auto opt_val{property_tree.get_optional<std::string>(key)};
-    return opt_val && opt_val.get() != "" ? opt_val.get() : "unknown";
+    return (opt_val && opt_val.get() != "") ? opt_val.get() : common::UNDEFINED_TEXT;
 }
 
 std::string Config::getResolvedValue(const std::string& key) const {
     auto opt_val{property_tree.get_optional<std::string>(key)};
     if (!opt_val || opt_val.get() == "") {
-        return "unknown";
+        return common::UNDEFINED_TEXT;
     }
     EnvVarStrResolver resolver{};
     resolver.setInput(opt_val.get());
-    if (!resolver.resolve()) {
-        return "unknown";
-    }
+    resolver.resolve();
     return resolver.getOutput();
 }
 

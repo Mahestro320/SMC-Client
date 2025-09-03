@@ -1,11 +1,12 @@
-#include "io/console.hpp"
 #include "shell/commands/clear.hpp"
+
+#include "io/console.hpp"
 #include "shell/system/cursor.hpp"
 
 exit_code_t ClearCommand::run() {
     return (getConsoleHandle() && getConsoleModes() && setNewConsoleMode() && clearScreen() &&
             restoreOriginalConsoleMode())
-               ? Success
+               ? Silent
                : Error;
 }
 

@@ -1,8 +1,9 @@
+#include "network/request/handlers/io_get_dir_content.hpp"
+
 #include "io/console.hpp"
 #include "network.hpp"
 #include "network/bfl/communicator.hpp"
 #include "network/client.hpp"
-#include "network/request/handlers/io_get_dir_content.hpp"
 
 using boost::asio::ip::tcp;
 
@@ -25,13 +26,7 @@ bool IOGetDirContentRH::sendPath(tcp::socket& socket) {
     if (!network::sendString(socket, path.string())) {
         return false;
     }
-    const ResponseId response_id{network::readResponse(socket)};
-    if (response_id != ResponseId::Ok) {
-        console::out::err("server returned " + std::to_string(static_cast<uint8_t>(response_id)) + " (" +
-                          network::response::getName(response_id) + ")");
-        return false;
-    }
-    return true;
+    return network::checkResponse(socket);
 }
 
 const std::vector<FileInfo>& IOGetDirContentRH::getData() const {

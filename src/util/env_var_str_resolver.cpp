@@ -1,54 +1,46 @@
-#include "io/console.hpp"
 #include "util/env_var_str_resolver.hpp"
 
-bool EnvVarStrResolver::resolve() {
+#include "io/console.hpp"
+
+void EnvVarStrResolver::resolve() {
     for (char c : input) {
-        if (!processNextChar(c)) {
-            return false;
-        }
+        processNextChar(c);
     }
-    return true;
+    if (is_in_var) {
+        output += '<' + current_var;
+    }
 }
 
-bool EnvVarStrResolver::processNextChar(char c) {
-    if (c == '<') {
-        if (is_in_var) {
-            console::out::err("syntax error: two env var opening found");
-            return false;
-        }
+void EnvVarStrResolver::processNextChar(char c) {
+    if (c == '<' && !is_in_var) {
         is_in_var = true;
-        return true;
+        return;
     }
-    if (c == '>') {
-        if (!is_in_var) {
-            console::out::err("syntax error: close of env var found without opening");
-            return false;
-        }
+    if (c == '>' && is_in_var) {
         is_in_var = false;
-        return insertEnvVar();
+        insertEnvVar();
+        return;
     }
     if (is_in_var) {
         current_var += c;
     } else {
         output += c;
     }
-    return true;
 }
 
-bool EnvVarStrResolver::insertEnvVar() {
+void EnvVarStrResolver::insertEnvVar() {
     if (current_var.empty()) {
-        console::out::err("syntax error: empty env var");
-        return false;
+        output += "<>";
+        return;
     }
     char* env_var_val{};
     size_t size{};
     if (_dupenv_s(&env_var_val, &size, current_var.c_str()) != 0 || !env_var_val) {
-        console::out::err("error: unknown env var: " + current_var);
-        return false;
+        output += '<' + current_var + '>';
+        return;
     }
     output += env_var_val;
     free(env_var_val);
-    return true;
 }
 
 void EnvVarStrResolver::setInput(const std::string& input) {

@@ -1,8 +1,9 @@
+#include "network/request/handlers/login.hpp"
+
 #include "io/console.hpp"
 #include "network.hpp"
 #include "network/client.hpp"
 #include "network/request/handlers/get_user_role.hpp"
-#include "network/request/handlers/login.hpp"
 
 using boost::asio::ip::tcp;
 namespace fs = std::filesystem;
@@ -12,7 +13,7 @@ bool LoginRH::run() {
     if (!network::sendRequest(socket, RequestId::Login)) {
         return false;
     }
-    if (!sendUserInfos(socket) || !checkResponse(socket) || !getUserRole()) {
+    if (!sendUserInfos(socket) || !network::checkResponse(socket) || !getUserRole()) {
         return false;
     }
     buildUser();
@@ -22,16 +23,6 @@ bool LoginRH::run() {
 bool LoginRH::sendUserInfos(tcp::socket& socket) const {
     console::out::verbose("sending username and password");
     return network::sendString(socket, final_user.name) && network::sendString(socket, final_user.password);
-}
-
-bool LoginRH::checkResponse(tcp::socket& socket) const {
-    ResponseId response_id{network::readResponse(socket)};
-    if (response_id != ResponseId::Ok) {
-        console::out::err("server returned " + std::to_string(static_cast<uint8_t>(response_id)) + " (" +
-                          network::response::getName(response_id) + ")");
-        return false;
-    }
-    return true;
 }
 
 bool LoginRH::getUserRole() {

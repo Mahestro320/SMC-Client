@@ -1,90 +1,55 @@
-#include <cerrno>
-#include <conio.h>
-#include <thread>
+#include "shell/commands/download.hpp"
+
 #include "io/console.hpp"
 #include "network/request/handlers/io_get_complete_path.hpp"
+#include "network/request/handlers/io_get_file_type.hpp"
 #include "network/request/handlers/io_get_real_path.hpp"
-#include "shell/commands/download.hpp"
+#include "network/request/handlers/util/get_dir_content_recursively.hpp"
 #include "shell/config.hpp"
-#include "shell/system/cursor.hpp"
-#include "util/string.hpp"
+#include "util/error_message.hpp"
+#include "util/fs.hpp"
 
 namespace fs = std::filesystem;
 
+DownloadCommand::~DownloadCommand() {
+    delete info_thread;
+}
+
 exit_code_t DownloadCommand::run() {
+    if (args.empty()) {
+        return InvalidArgs;
+    }
     if (!init()) {
         return Error;
     }
-    initQueue();
-    createThreads();
-    infoLoop();
-    deleteFileInstance();
-    deleteFileIfNeeded();
-    return error_flag.load(std::memory_order_acquire) ? Error : Success;
+    try {
+        _run();
+    } catch (const std::exception& e) {
+        console::out::err("error: " + std::string{e.what()});
+        stop_flag.store(true, std::memory_order_release);
+        stopInfoThread();
+        return Error;
+    }
+    return Success;
 }
 
 bool DownloadCommand::init() {
-    loadBufferSize();
-    if (!getInputPath() || !getOutputPath()) {
-        return false;
-    }
-    console::out::verbose("input path: " + input_path_real.string() + "\noutput path: " + output_path.string());
-    if (!beginHandler() || !createOutputFile()) {
+    if (!getInputPath() || !getInputFiles()) {
         return false;
     }
     return true;
-}
-
-void DownloadCommand::initQueue() {
-    queue.setMaxSize(MAX_QUEUE_SIZE);
-}
-
-void DownloadCommand::createThreads() {
-    createWriterThread();
-    createReaderThread();
-    createCancelThread();
-}
-
-void DownloadCommand::deleteFileInstance() {
-    if (output_file) {
-        output_file->close();
-        delete output_file;
-    }
-}
-
-void DownloadCommand::deleteFileIfNeeded() {
-    Config& config{Config::getInstance()};
-    const ConfigValues& config_values{config.getValues()};
-    if (!config_values.cmd_download_del_file_on_stop || !stop_flag.load(std::memory_order_acquire)) {
-        return;
-    }
-    std::error_code ec{};
-    std::filesystem::remove(output_path, ec);
-    if (ec) {
-        console::out::err("error while removing output file: " + ec.message());
-    }
-}
-
-void DownloadCommand::loadBufferSize() {
-    const Config& config{Config::getInstance()};
-    const ConfigValues& values{config.getValues()};
-    buffer_size = values.cmd_download_buffer_size;
 }
 
 bool DownloadCommand::getInputPath() {
-    return getRawInputPath() && readCompleteInputPath() && readRealInputPath();
+    getInputPathRaw();
+    return getInputPathComplete() && getInputPathReal();
 }
 
-bool DownloadCommand::getRawInputPath() {
-    if (args.empty()) {
-        console::out::err("invalid command argument");
-        return false;
-    }
-    input_path_raw = fs::path{args[0]};
-    return true;
+void DownloadCommand::getInputPathRaw() {
+    input_path_raw = args[0];
 }
 
-bool DownloadCommand::readCompleteInputPath() {
+bool DownloadCommand::getInputPathComplete() {
     IOGetCompletePathRH handler{};
     handler.setClient(client);
     handler.setPath(input_path_raw);
@@ -92,14 +57,14 @@ bool DownloadCommand::readCompleteInputPath() {
         return false;
     }
     if (!handler.fileExists()) {
-        console::out::err("target file \"" + input_path_raw.string() + "\" does not exists");
+        console::out::err("the path does not exists");
         return false;
     }
     input_path_complete = handler.getValue();
     return true;
 }
 
-bool DownloadCommand::readRealInputPath() {
+bool DownloadCommand::getInputPathReal() {
     IOGetRealPathRH handler{};
     handler.setClient(client);
     handler.setPath(input_path_complete);
@@ -110,197 +75,101 @@ bool DownloadCommand::readRealInputPath() {
     return true;
 }
 
-bool DownloadCommand::getOutputPath() {
-    if (args.size() >= 2) {
-        output_path = args[1];
-        return true;
-    }
-    console::out::verbose("output path isn't specified, setting default value");
-    const Config& config{Config::getInstance()};
-    const ConfigValues& values{config.getValues()};
-    try {
-        output_path = values.cmd_download_output / getNewOutputFileNameInDir(values.cmd_download_output);
-    } catch (const std::exception& e) {
-        console::out::err(e);
-        return false;
-    }
-    return true;
-}
-
-bool DownloadCommand::createOutputFile() {
-    console::out::verbose("creating output file... ", false);
-    output_file = new std::ofstream{output_path, std::ios::binary | std::ios::app};
-    if (!output_file || !output_file->is_open()) {
-        console::out::err("error while creating output file");
-        return false;
-    }
-    console::out::verbose("success");
-    return true;
-}
-
-std::filesystem::path DownloadCommand::getNewOutputFileNameInDir(const std::filesystem::path& path) const {
-    std::filesystem::path result{};
-    const std::filesystem::path input_path_no_ext{input_path_real.stem()};
-    const std::filesystem::path input_path_ext{input_path_real.extension()};
-    const std::string filename{input_path_no_ext.string()};
-    const std::string file_ext{input_path_ext.string()};
-    uint64_t i{};
-    do {
-        result = filename + (i == 0 ? "" : (filename.empty() ? "" : "_") + std::to_string(i + 1)) + file_ext;
-        ++i;
-    } while (fs::exists(path / result));
-    return result;
-}
-
-bool DownloadCommand::beginHandler() {
+bool DownloadCommand::getInputFiles() {
+    IOGetFileTypeRH handler{};
     handler.setClient(client);
     handler.setPath(input_path_real);
-    handler.setBufferSize(buffer_size);
     if (!handler.run()) {
         return false;
     }
-    buffer_count = handler.getBufferCount();
-    return true;
-}
-
-void DownloadCommand::infoLoop() {
-    initInfoPrinter();
-    startInfoLoop();
-}
-
-void DownloadCommand::initInfoPrinter() {
-    info_printer.setBufferSize(buffer_size);
-    info_printer.setBufferCount(buffer_count);
-}
-
-void DownloadCommand::startInfoLoop() {
-    console::out::inf("downloading file, press ESC to cancel\n");
-    shell::cursor::setVisible(false);
-    do {
-        printInfoMessage();
-    } while (!transmitionFinished());
-    endInfoLoop();
-    shell::cursor::setVisible(true);
-}
-
-void DownloadCommand::endInfoLoop() {
-    if (stop_flag.load(std::memory_order_acquire) || error_flag.load(std::memory_order_acquire)) {
-        console::out::inf();
+    const FileType file_type{handler.getValue()};
+    if (file_type == FileType::File) {
+        input_files.push_back(input_path_real);
+    } else if (file_type == FileType::Directory) {
+        console::out::inf("getting files to download");
+        input_files = getDirectoryContent();
+        console::out::inf("found " + std::to_string(input_files.size()) + " files");
     } else {
-        printInfoMessageNoWait();
-    }
-    if (is_cancelled_by_esc) {
-        console::out::inf("operation cancelled");
-    }
-}
-
-void DownloadCommand::printInfoMessage() {
-    printInfoMessageNoWait();
-    std::this_thread::sleep_for(std::chrono::seconds{1});
-}
-
-void DownloadCommand::printInfoMessageNoWait() {
-    info_printer.setCurrBufferIndex(curr_buffer_idx.load(std::memory_order_acquire));
-    info_printer.update();
-    info_printer.print();
-}
-
-void DownloadCommand::createReaderThread() {
-    std::thread t{[&] { readerThreadHandle(); }};
-    t.detach();
-}
-
-void DownloadCommand::readerThreadHandle() {
-    bool stopped{};
-    for (; handler.available() && !stopped; curr_buffer_idx.fetch_add(1, std::memory_order_release)) {
-        if (!downloadNextBuffer()) {
-            error_flag.store(true, std::memory_order_release);
-            stopped = true;
-            break;
-        }
-        stopped = writer_finished_flag.load(std::memory_order_acquire) || stop_flag.load(std::memory_order_acquire);
-    }
-    if (stopped) {
-        stop_flag.store(true, std::memory_order_release);
-        stopHandler();
-    }
-    reader_finished_flag.store(true, std::memory_order_release);
-}
-
-bool DownloadCommand::downloadNextBuffer() {
-    if (!handler.downloadNextBuffer()) {
-        return false;
-    }
-    waitForFreeSpaceInQueue();
-    queue.pushBack(handler.getCurrentBuffer());
-    cv.notify_one();
-    return true;
-}
-
-void DownloadCommand::stopHandler() {
-    handler.stop();
-}
-
-void DownloadCommand::waitForFreeSpaceInQueue() {
-    std::unique_lock lock(mtx);
-    cv.wait(lock, [&] { return queue.size() < queue.maxSize(); });
-}
-
-void DownloadCommand::createWriterThread() {
-    std::thread t{[&] { writerThreadHandle(); }};
-    t.detach();
-}
-
-void DownloadCommand::writerThreadHandle() {
-    while (!stop_flag.load(std::memory_order_acquire) &&
-           (!reader_finished_flag.load(std::memory_order_acquire) || !queue.empty())) {
-        waitForQueueToBeFilled();
-        if (!writeNextBuffer()) {
-            stop_flag.store(true, std::memory_order_release);
-            error_flag.store(true, std::memory_order_release);
-            break;
-        }
-    }
-    writer_finished_flag.store(true, std::memory_order_release);
-}
-
-void DownloadCommand::waitForQueueToBeFilled() {
-    std::unique_lock lock(mtx);
-    cv.wait(lock, [&] { return !queue.empty(); });
-}
-
-bool DownloadCommand::writeNextBuffer() {
-    std::vector<char> buffer{queue.getAndPopFront()};
-    cv.notify_one();
-    output_file->write(buffer.data(), static_cast<std::streamsize>(buffer.size()));
-    if (!*output_file) {
-        char buffer[1024];
-        strerror_s(buffer, sizeof(buffer), errno);
-        console::out::err("error while writing data into file: " + std::string{buffer});
+        console::out::err("error: unknown file type");
         return false;
     }
     return true;
 }
 
-void DownloadCommand::createCancelThread() {
-    std::thread t{[&] { cancelThreadHandle(); }};
-    t.detach();
+std::vector<fs::path> DownloadCommand::getDirectoryContent() const {
+    GetDirContentRecursively handler{};
+    handler.setClient(client);
+    handler.setPath(input_path_real);
+    if (!handler.run()) {
+        return {};
+    }
+    return handler.getContent();
 }
 
-void DownloadCommand::cancelThreadHandle() {
-    while (!stop_flag.load(std::memory_order_acquire) && !reader_finished_flag.load(std::memory_order_acquire) &&
-           !writer_finished_flag.load(std::memory_order_acquire)) {
-        std::this_thread::sleep_for(std::chrono::microseconds(10));
-        if (_kbhit() && _getch() == ESC_KEY) {
-            stop_flag.store(true, std::memory_order_release);
-            is_cancelled_by_esc = true;
+bool DownloadCommand::startTransmition() {
+    console::out::inf(std::string{(input_files.size() <= 1) ? "" : "\n"} + "press ESC to cancel\n");
+    for (const fs::path& filepath : input_files) {
+        if (stop_flag.load(std::memory_order_acquire)) {
             break;
         }
+        if (!downloadFile(filepath)) {
+            return false;
+        }
     }
-    cancel_finished_flag.store(true, std::memory_order_release);
+    transmition_finished_flag.store(true, std::memory_order_relaxed);
+    return true;
 }
 
-bool DownloadCommand::transmitionFinished() {
-    return reader_finished_flag.load(std::memory_order_acquire) &&
-           writer_finished_flag.load(std::memory_order_acquire) && cancel_finished_flag.load(std::memory_order_acquire);
+bool DownloadCommand::downloadFile(const fs::path& path) {
+    if (input_files.size() > 1) {
+        console::out::inf("downloading file \"" + path.string() + '"');
+    }
+    IOGetFileContentRH handler{std::move(getNewIOGetFileContentRH(path))};
+    std::ofstream* file{};
+    if (!handler.run() || !createOutputFile(path, file)) {
+        return false;
+    }
+    buffer_count.store(handler.getBufferCount(), std::memory_order_release);
+    createInfoThread();
+    for (; handler.available(); curr_buffer_idx.fetch_add(1, std::memory_order_release)) {
+        if (stop_flag.load(std::memory_order_acquire) || !handler.downloadNextBuffer()) {
+            handler.stop();
+            util::fs::freeStream(file);
+            return false;
+        }
+        util::fs::writeBufferInFile(*file, handler.getCurrentBuffer());
+    }
+    util::fs::freeStream(file);
+    stopInfoThread();
+    return true;
+}
+
+IOGetFileContentRH DownloadCommand::getNewIOGetFileContentRH(const fs::path& path) {
+    IOGetFileContentRH handler{};
+    handler.setClient(client);
+    const Config& config{Config::getInstance()};
+    const ConfigValues& config_values{config.getValues()};
+    handler.setBufferSize(config_values.cmd_download_buffer_size);
+    handler.setPath(path);
+    return handler;
+}
+
+bool DownloadCommand::createOutputFile(const fs::path& path, std::ofstream*& file) const {
+    const fs::path output_path{util::fs::getNonExistingPath(getOutputPathFromSource(path))};
+    const fs::path output_path_parent{output_path.parent_path()};
+    fs::create_directories(output_path_parent);
+    file = new std::ofstream{output_path, std::ios::binary | std::ios::beg};
+    if (!file->is_open()) {
+        delete file;
+        console::out::err("error while creating file \"" + path.string() + "\": " + util::error_message::get(errno));
+        return false;
+    }
+    return true;
+}
+
+fs::path DownloadCommand::getOutputPathFromSource(const fs::path& source) const {
+    const Config& config{Config::getInstance()};
+    const ConfigValues& config_values{config.getValues()};
+    const fs::path relative_path{fs::relative(source, input_path_real.parent_path())};
+    return fs::path{config_values.cmd_download_output} / relative_path;
 }

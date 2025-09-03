@@ -1,14 +1,18 @@
+#include "shell/commands/login.hpp"
+
 #include "io/console.hpp"
 #include "network/client.hpp"
-#include "shell/commands/login.hpp"
 
 using boost::asio::ip::tcp;
 
 exit_code_t LoginCommand::run() {
+    if (args.size() < 2) {
+        return InvalidArgs;
+    }
     if (!getArgumentsValues()) {
         return Error;
     }
-    return login() ? Success : Error;
+    return (login()) ? Success : Error;
 }
 
 bool LoginCommand::login() {
@@ -35,14 +39,6 @@ bool LoginCommand::getConnectedUser() {
 }
 
 bool LoginCommand::getArgumentsValues() {
-    if (args.empty()) {
-        console::out::err("invalid arguments: missing username");
-        return false;
-    }
-    if (args.size() < 2) {
-        console::out::err("invalid arguments: missing password");
-        return false;
-    }
     username = args[0];
     if (args.size() >= 2) {
         password = args[1];

@@ -1,8 +1,9 @@
+#include "shell/commands/dir.hpp"
+
 #include "io/console.hpp"
 #include "io/file_info.hpp"
 #include "network/client.hpp"
 #include "network/request/handlers/io_get_dir_content.hpp"
-#include "shell/commands/dir.hpp"
 #include "util/byte.hpp"
 #include "util/string.hpp"
 
@@ -34,7 +35,7 @@ void DirCommand::printData() const {
     }
     for (const FileInfo& file : data) {
         const std::string type_str{file_type::getName(file.type)};
-        const std::string size_str{file.type == FileType::File ? util::byte::toAutoUnit(file.size) : ""};
+        const std::string size_str{(file.type == FileType::File) ? util::byte::toAutoUnit(file.size) : ""};
         console::out::inf("\t" + type_str + util::string::makeFilledString(TYPE_SPACES_COUNT - type_str.size()) +
                           size_str + util::string::makeFilledString(SIZE_SPACES_COUNT - size_str.size()) + file.name);
     }

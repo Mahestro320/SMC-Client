@@ -1,8 +1,9 @@
+#include "shell/system/signal.hpp"
+
 #include <csignal>
 #include "io/console.hpp"
 #include "network/client.hpp"
 #include "shell.hpp"
-#include "shell/system/signal.hpp"
 
 namespace {
 

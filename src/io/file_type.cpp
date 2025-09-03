@@ -1,5 +1,6 @@
-#include <unordered_map>
 #include "io/file_type.hpp"
+
+#include <unordered_map>
 
 namespace {
 
@@ -12,7 +13,7 @@ std::unordered_map<FileType, std::string> file_type_names{
 }
 
 std::string file_type::getName(FileType id) {
-    return isValid(id) ? file_type_names.at(id) : "UNKNOWN";
+    return (isValid(id)) ? file_type_names.at(id) : "UNKNOWN";
 }
 
 bool file_type::isValid(FileType id) {

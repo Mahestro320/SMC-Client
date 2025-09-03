@@ -1,6 +1,7 @@
+#include "shell/commands/help.hpp"
+
 #include "io/console.hpp"
 #include "network/client.hpp"
-#include "shell/commands/help.hpp"
 #include "shell/commands_infos.hpp"
 #include "util/string.hpp"
 
@@ -59,7 +60,7 @@ exit_code_t HelpCommand::printLongDescription() const {
 
 void HelpCommand::printLongDescriptionOf(const CommandInfos& cmd) const {
     if (canSee(cmd)) {
-        console::out::inf(cmd.long_description.empty() ? cmd.short_description : cmd.long_description);
+        console::out::inf((cmd.long_description.empty()) ? cmd.short_description : cmd.long_description);
         return;
     }
     const User& user{client->getUser()};
