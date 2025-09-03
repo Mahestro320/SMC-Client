@@ -1,6 +1,6 @@
 #pragma once
 
-#define _WIN32_WINNT 0x0601
+#include "system/beg.hpp"
 
 #include <boost/asio.hpp>
 #include <concepts>
@@ -18,8 +18,11 @@ extern bool sendBuffer(boost::asio::ip::tcp::socket& socket, const std::vector<c
 extern ResponseId readResponse(boost::asio::ip::tcp::socket& socket, bool silent = false);
 extern bool readString(boost::asio::ip::tcp::socket& socket, std::string& str, bool silent = false);
 extern bool readBuffer(boost::asio::ip::tcp::socket& socket, std::vector<char>& buffer, bool silent = false);
+extern bool checkResponse(boost::asio::ip::tcp::socket& socket, bool silent = false);
 
-template<std::integral T> extern bool sendInt(boost::asio::ip::tcp::socket& socket, T byte);
-template<std::integral T> extern bool readInt(boost::asio::ip::tcp::socket& socket, T& byte);
+template<std::integral T> bool sendInt(boost::asio::ip::tcp::socket& socket, T byte);
+template<std::integral T> bool readInt(boost::asio::ip::tcp::socket& socket, T& byte);
 
 } // namespace network
+
+#include "network.ipp"

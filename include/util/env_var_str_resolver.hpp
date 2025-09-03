@@ -1,5 +1,7 @@
 #pragma once
 
+#include "system/beg.hpp"
+
 #include <string>
 
 class EnvVarStrResolver final {
@@ -8,13 +10,13 @@ class EnvVarStrResolver final {
     bool is_in_var{};
     std::string current_var{};
 
-    bool processNextChar(char c);
-    bool insertEnvVar();
+    void processNextChar(char c);
+    void insertEnvVar();
 
   public:
     EnvVarStrResolver() = default;
 
-    bool resolve();
+    void resolve();
 
     void setInput(const std::string& input);
     const std::string& getOutput() const;

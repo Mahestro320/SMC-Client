@@ -1,5 +1,7 @@
 #pragma once
 
+#include "system/beg.hpp"
+
 #include <WinSock2.h>
 #include <Windows.h>
 #include "../command.hpp"

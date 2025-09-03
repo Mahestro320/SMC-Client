@@ -1,5 +1,7 @@
 #pragma once
 
+#include "system/beg.hpp"
+
 #include <string>
 #include <vector>
 #include "user/role.hpp"
@@ -18,6 +20,9 @@ static inline const std::vector<CommandInfos> commands_infos{
     CommandInfos{
         .name = "help",
         .short_description = "show help",
+        .long_description = "usage: help <command name (optional)>\n"
+                            "if command name is given, it prints the long description of it\n"
+                            "wait... you already know that because you had to do that to access this text :)",
         .can_use_offline = true,
     },
     CommandInfos{
@@ -45,6 +50,12 @@ static inline const std::vector<CommandInfos> commands_infos{
                             "\tprint   prints all the values\n"
                             "\tset     set a value with a key using [<key> <value>]\n"
                             "\tget     gets a value from a key using [<key>]",
+        .can_use_offline = true,
+    },
+    CommandInfos{
+        .name = "print",
+        .short_description = "prints text",
+        .long_description = "usage: print <text>",
         .can_use_offline = true,
     },
     CommandInfos{
@@ -76,14 +87,43 @@ static inline const std::vector<CommandInfos> commands_infos{
         .short_name = "cd",
         .short_description = "sets the current directory",
         .long_description =
-            "usage: cd <location>\nsets the current directory at the location relative to the current directory",
+            "usage: chdir <location>\nsets the current directory at the location relative to the current directory",
         .must_be_logged = true,
     },
     CommandInfos{
         .name = "download",
         .short_name = "dwl",
         .short_description = "download a file",
-        .long_description = "usage: download <input path> <output path (optional)>",
+        .long_description = "usage: download <input path>",
+        .must_be_logged = true,
+    },
+    CommandInfos{
+        .name = "upload",
+        .short_name = "upl",
+        .short_description = "upload a file",
+        .long_description = "usage: upload <input path>",
+        .must_be_logged = true,
+    },
+    CommandInfos{
+        .name = "syscmd",
+        .short_name = "scm",
+        .short_description = "executes a system command",
+        .long_description = "usage: syscmd <command>",
+        .must_be_logged = true,
+        .min_role = Role::Developer,
+    },
+    CommandInfos{
+        .name = "mkfile",
+        .short_name = "mf",
+        .short_description = "creates a file",
+        .long_description = "usage: mkfile <filename>",
+        .must_be_logged = true,
+    },
+    CommandInfos{
+        .name = "mkdir",
+        .short_name = "md",
+        .short_description = "creates a directory",
+        .long_description = "usage: mkdir <filename>",
         .must_be_logged = true,
     },
 };

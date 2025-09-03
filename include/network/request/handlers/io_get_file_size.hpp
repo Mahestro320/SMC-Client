@@ -1,6 +1,6 @@
 #pragma once
 
-#define _WIN32_WINNT 0x0601
+#include "system/beg.hpp"
 
 #include <boost/asio.hpp>
 #include <filesystem>
@@ -12,7 +12,6 @@ class IOGetFileSizeRH final : public RH {
     std::filesystem::path path{};
 
     bool sendFilePath(boost::asio::ip::tcp::socket& socket);
-    bool checkResponse(boost::asio::ip::tcp::socket& socket);
     bool getFileSize(boost::asio::ip::tcp::socket& socket);
 
   public:

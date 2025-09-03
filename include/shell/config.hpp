@@ -1,5 +1,7 @@
 #pragma once
 
+#include "system/beg.hpp"
+
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -13,8 +15,8 @@ struct ConfigValues {
     bool shell_print_addr_prefix{};
 
     std::string cmd_download_output{};
-    uint64_t cmd_download_buffer_size{};
-    bool cmd_download_del_file_on_stop{};
+    uint16_t cmd_download_buffer_size{};
+    uint16_t cmd_upload_buffer_size{};
 };
 
 class Config final {

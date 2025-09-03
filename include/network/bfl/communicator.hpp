@@ -1,5 +1,8 @@
 #pragma once
 
+#include <vector>
+#include "system/beg.hpp"
+
 struct FileInfo;
 class BFLDecoder;
 class Client;

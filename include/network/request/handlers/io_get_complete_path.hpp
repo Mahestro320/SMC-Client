@@ -1,5 +1,7 @@
 #pragma once
 
+#include "system/beg.hpp"
+
 #include "network/request/handlers/io_file_exists.hpp"
 
 class IOGetCompletePathRH final : public RH {

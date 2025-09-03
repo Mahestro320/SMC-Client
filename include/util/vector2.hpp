@@ -1,5 +1,7 @@
 #pragma once
 
+#include "system/beg.hpp"
+
 template<typename T> struct Vector2 final {
     T x{}, y{};
 };

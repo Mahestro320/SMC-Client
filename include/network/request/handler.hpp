@@ -1,5 +1,7 @@
 #pragma once
 
+#include "system/beg.hpp"
+
 class Client;
 
 // Request Handler
@@ -11,5 +13,5 @@ class RH {
     RH() = default;
 
     void setClient(Client* client);
-    virtual bool run() = 0;
+    [[nodiscard]] virtual bool run() = 0;
 };

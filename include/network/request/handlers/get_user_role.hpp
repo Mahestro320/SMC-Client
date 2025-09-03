@@ -1,6 +1,6 @@
 #pragma once
 
-#define _WIN32_WINNT 0x0601
+#include "system/beg.hpp"
 
 #include <boost/asio.hpp>
 #include "../handler.hpp"
@@ -10,7 +10,6 @@ class GetUserRoleRH final : public RH {
   private:
     Role role{Role::None};
 
-    bool checkResponse(boost::asio::ip::tcp::socket& socket) const;
     bool getRole(boost::asio::ip::tcp::socket& socket);
 
   public:

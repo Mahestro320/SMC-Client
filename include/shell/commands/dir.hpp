@@ -1,5 +1,7 @@
 #pragma once
 
+#include "system/beg.hpp"
+
 #include "../command.hpp"
 #include "io/file_info.hpp"
 

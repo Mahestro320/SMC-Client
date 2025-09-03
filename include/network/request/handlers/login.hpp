@@ -1,6 +1,6 @@
 #pragma once
 
-#define _WIN32_WINNT 0x0601
+#include "system/beg.hpp"
 
 #include <boost/asio.hpp>
 #include "../handler.hpp"
@@ -11,7 +11,6 @@ class LoginRH final : public RH {
     User final_user{};
 
     bool sendUserInfos(boost::asio::ip::tcp::socket& socket) const;
-    bool checkResponse(boost::asio::ip::tcp::socket& socket) const;
     bool getUserRole();
     void buildUser();
 

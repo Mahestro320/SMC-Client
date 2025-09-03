@@ -1,5 +1,7 @@
 #pragma once
 
+#include "system/beg.hpp"
+
 #include "../handler.hpp"
 
 class LogoutRH final : public RH {

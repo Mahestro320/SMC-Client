@@ -1,5 +1,7 @@
 #pragma once
 
+#include "system/beg.hpp"
+
 #include "../command.hpp"
 #include "network/request/handlers/login.hpp"
 
