@@ -1,0 +1,61 @@
+#include "network/request/handlers/login.hpp"
+
+#include "io/console.hpp"
+#include "network.hpp"
+#include "network/client.hpp"
+#include "network/request/handlers/get_user_role.hpp"
+
+using boost::asio::ip::tcp;
+namespace fs = std::filesystem;
+
+bool LoginRH::run() {
+    tcp::socket& socket{client->getSocket()};
+    if (!network::sendRequest(socket, RequestId::Login)) {
+        return false;
+    }
+    if (!sendUserInfos(socket) || !network::checkResponse(socket) || !getUserRole()) {
+        return false;
+    }
+    buildUser();
+    return true;
+}
+
+bool LoginRH::sendUserInfos(tcp::socket& socket) const {
+    console::out::verbose("sending username and password");
+    return network::sendString(socket, final_user.name) && network::sendString(socket, final_user.password);
+}
+
+bool LoginRH::getUserRole() {
+    GetUserRoleRH handler{};
+    handler.setClient(client);
+    if (!handler.run()) {
+        return false;
+    }
+    final_user.role = handler.getValue();
+    return true;
+}
+
+void LoginRH::buildUser() {
+#pragma warning(push)
+#pragma warning(disable : 26813)
+    if (final_user.role == Role::User) {
+        final_user.current_dir = fs::path{"perso." + final_user.name};
+    } else if (final_user.role == Role::Admin) {
+        final_user.current_dir = fs::path{"network"} / ("perso." + final_user.name);
+    } else if (final_user.role == Role::Developer) {
+        final_user.current_dir = fs::path{"C:\\"};
+    }
+#pragma warning(pop)
+}
+
+void LoginRH::setUsername(std::string username) {
+    final_user.name = username;
+}
+
+void LoginRH::setPassword(std::string password) {
+    final_user.password = password;
+}
+
+const User& LoginRH::getConnectedUser() const {
+    return final_user;
+}
