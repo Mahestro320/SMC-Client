@@ -6,7 +6,7 @@
 
 namespace constants {
 
-inline constexpr Version VERSION{0, 4, 0};
+inline constexpr Version VERSION{0, 5, 0};
 inline const std::string INFO_MESSAGE{"SMC (Super Mega Cool) Client Shell v" + VERSION.toString() + " by Mahestro_320"};
 
 } // namespace constants
