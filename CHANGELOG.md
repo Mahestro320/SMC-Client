@@ -84,6 +84,9 @@
 - adding command `mkdir`
 - adding request handler `io_create_directory`
 - can now use simple quotes and double quotes in shell command
+
+## Version 0.5.0
+
 - adding command `upload`
 - adding request handler `io_delete_file`
 - adding command `delete`
