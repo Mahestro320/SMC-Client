@@ -1,0 +1,20 @@
+#pragma once
+
+#include "system/beg.hpp"
+
+#include "../command.hpp"
+
+class ConfCommand final : public Command {
+  private:
+    bool runOption(const std::string& name);
+    bool runLoadOption() const;
+    bool runSaveOption() const;
+    bool runPrintOption() const;
+    bool runSetOption() const;
+    bool runGetOption() const;
+
+  public:
+    ConfCommand() = default;
+
+    exit_code_t run() override;
+};

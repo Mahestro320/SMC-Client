@@ -85,3 +85,7 @@
 - adding request handler `io_create_directory`
 - can now use simple quotes and double quotes in shell command
 - adding command `upload`
+- adding request handler `io_delete_file`
+- adding command `delete`
+- adding request handler `get_version`
+- adding command `server-ver`
